@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskHorizon | Today, Week & Month Activity Tracker</title>
+  <meta name="description" content="A modern, intuitive To-Do and Activity Tracker for Today, This Week, and This Month with visual dashboard and analytics.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <!-- Chart.js for Visual Dashboard -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- Canvas Confetti for completion celebration -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body data-theme="dark">
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <i class="fa-solid fa-layer-group"></i>
+          </div>
+          <div class="logo-text">
+            <h2>TaskHorizon</h2>
+            <span class="subtitle">Time-Horizon Planner</span>
+          </div>
+        </div>
+        <button class="mobile-toggle" id="closeSidebarBtn" aria-label="Close sidebar">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-section-title">Views</div>
+        <button class="nav-btn active" data-view="dashboard">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Visual Dashboard</span>
+        </button>
+        <button class="nav-btn" data-view="all-tasks">
+          <i class="fa-solid fa-list-check"></i>
+          <span>All Activities</span>
+          <span class="badge-count" id="countAll">0</span>
+        </button>
+
+        <div class="nav-section-title">Time Horizons</div>
+        <button class="nav-btn" data-filter-scope="today">
+          <i class="fa-solid fa-sun text-amber"></i>
+          <span>Today</span>
+          <span class="badge-count" id="countToday">0</span>
+        </button>
+        <button class="nav-btn" data-filter-scope="week">
+          <i class="fa-solid fa-calendar-week text-indigo"></i>
+          <span>This Week</span>
+          <span class="badge-count" id="countWeek">0</span>
+        </button>
+        <button class="nav-btn" data-filter-scope="month">
+          <i class="fa-solid fa-calendar-days text-teal"></i>
+          <span>This Month</span>
+          <span class="badge-count" id="countMonth">0</span>
+        </button>
+        <button class="nav-btn" data-filter-scope="overdue">
+          <i class="fa-solid fa-triangle-exclamation text-rose"></i>
+          <span>Overdue</span>
+          <span class="badge-count badge-rose" id="countOverdue">0</span>
+        </button>
+
+        <div class="nav-section-title">Categories</div>
+        <div class="category-filters" id="categoryFilterList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="data-actions">
+          <button class="btn-subtle" id="exportDataBtn" title="Backup activities to JSON file">
+            <i class="fa-solid fa-file-export"></i> Export
+          </button>
+          <label class="btn-subtle file-label" title="Import activities from JSON file">
+            <i class="fa-solid fa-file-import"></i> Import
+            <input type="file" id="importDataInput" accept=".json" style="display:none;">
+          </label>
+          <button class="btn-subtle" id="resetDataBtn" title="Reset to sample activities">
+            <i class="fa-solid fa-rotate-left"></i> Reset
+          </button>
+        </div>
+        <div class="theme-toggle-wrapper">
+          <span class="theme-label"><i class="fa-solid fa-moon"></i> Dark Theme</span>
+          <label class="switch">
+            <input type="checkbox" id="themeToggleCheckbox" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-wrapper">
+      <!-- Top Navbar -->
+      <header class="top-navbar">
+        <div class="top-nav-left">
+          <button class="mobile-toggle open-sidebar-btn" id="openSidebarBtn" aria-label="Open navigation">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <div class="current-date-info">
+            <h1 id="pageTitle">Dashboard</h1>
+            <p id="pageCurrentDate">Saturday, November 21, 2026</p>
+          </div>
+        </div>
+
+        <div class="top-nav-right">
+          <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="globalSearchInput" placeholder="Search tasks, categories, tags...">
+            <button id="clearSearchBtn" class="clear-btn" style="display:none;">&times;</button>
+          </div>
+          <button class="btn-primary" id="openAddModalBtn">
+            <i class="fa-solid fa-plus"></i>
+            <span>Add Activity</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Dashboard View Container -->
+      <section class="content-section" id="dashboardView">
+        <!-- Hero Horizon Banner -->
+        <div class="dashboard-hero-card">
+          <div class="hero-left">
+            <div class="hero-greeting">
+              <span class="greeting-badge"><i class="fa-solid fa-bolt"></i> Horizon Status</span>
+              <h2 id="heroGreetingText">Welcome! Here's your activity outlook.</h2>
+              <p id="heroSummaryText">Loading your schedule...</p>
+            </div>
+            <div class="quick-horizon-pills">
+              <span class="horizon-pill today-pill" id="heroTodayPill"><i class="fa-solid fa-sun"></i> Today: <strong>0</strong></span>
+              <span class="horizon-pill week-pill" id="heroWeekPill"><i class="fa-solid fa-calendar-week"></i> This Week: <strong>0</strong></span>
+              <span class="horizon-pill month-pill" id="heroMonthPill"><i class="fa-solid fa-calendar-days"></i> This Month: <strong>0</strong></span>
+              <span class="horizon-pill overdue-pill" id="heroOverduePill"><i class="fa-solid fa-circle-exclamation"></i> Overdue: <strong>0</strong></span>
+            </div>
+          </div>
+          <div class="hero-progress-ring">
+            <div class="progress-radial-container">
+              <svg viewBox="0 0 100 100" class="radial-svg">
+                <circle class="radial-bg" cx="50" cy="50" r="42"></circle>
+                <circle class="radial-meter" id="heroProgressCircle" cx="50" cy="50" r="42"></circle>
+              </svg>
+              <div class="radial-content">
+                <span class="radial-percent" id="heroProgressText">0%</span>
+                <span class="radial-sub">Completed</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Metric Cards -->
+        <div class="metrics-grid">
+          <!-- Metric: Today -->
+          <div class="metric-card metric-today" data-filter="today">
+            <div class="metric-top">
+              <div class="metric-icon-box bg-amber-soft">
+                <i class="fa-solid fa-sun text-amber"></i>
+              </div>
+              <span class="metric-chip">Horizon: 24 Hours</span>
+            </div>
+            <div class="metric-value-box">
+              <h3 id="statTodayTotal">0</h3>
+              <p>Due Today</p>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-amber" id="barTodayProgress" style="width: 0%"></div>
+            </div>
+            <div class="metric-footer">
+              <span id="statTodayPending">0 still not done</span>
+              <span id="statTodayDone">0 done</span>
+            </div>
+          </div>
+
+          <!-- Metric: This Week -->
+          <div class="metric-card metric-week" data-filter="week">
+            <div class="metric-top">
+              <div class="metric-icon-box bg-indigo-soft">
+                <i class="fa-solid fa-calendar-week text-indigo"></i>
+              </div>
+              <span class="metric-chip">Horizon: 7 Days</span>
+            </div>
+            <div class="metric-value-box">
+              <h3 id="statWeekTotal">0</h3>
+              <p>This Week</p>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-indigo" id="barWeekProgress" style="width: 0%"></div>
+            </div>
+            <div class="metric-footer">
+              <span id="statWeekPending">0 still not done</span>
+              <span id="statWeekDone">0 done</span>
+            </div>
+          </div>
+
+          <!-- Metric: This Month -->
+          <div class="metric-card metric-month" data-filter="month">
+            <div class="metric-top">
+              <div class="metric-icon-box bg-teal-soft">
+                <i class="fa-solid fa-calendar-days text-teal"></i>
+              </div>
+              <span class="metric-chip">Horizon: 30 Days</span>
+            </div>
+            <div class="metric-value-box">
+              <h3 id="statMonthTotal">0</h3>
+              <p>This Month</p>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-teal" id="barMonthProgress" style="width: 0%"></div>
+            </div>
+            <div class="metric-footer">
+              <span id="statMonthPending">0 still not done</span>
+              <span id="statMonthDone">0 done</span>
+            </div>
+          </div>
+
+          <!-- Metric: Overdue / Critical -->
+          <div class="metric-card metric-overdue" data-filter="overdue">
+            <div class="metric-top">
+              <div class="metric-icon-box bg-rose-soft">
+                <i class="fa-solid fa-triangle-exclamation text-rose"></i>
+              </div>
+              <span class="metric-chip chip-rose">Needs Attention</span>
+            </div>
+            <div class="metric-value-box">
+              <h3 id="statOverdueTotal">0</h3>
+              <p>Overdue Activities</p>
+            </div>
+            <div class="metric-progress-bar">
+              <div class="progress-fill fill-rose" id="barOverdueAlert" style="width: 100%"></div>
+            </div>
+            <div class="metric-footer">
+              <span id="statOverdueAdvice">Pass due date</span>
+              <span class="action-link" id="viewOverdueLink">Review &rarr;</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Charts Grid -->
+        <div class="charts-row">
+          <!-- Chart 1: Status Distribution Doughnut -->
+          <div class="chart-card">
+            <div class="card-header-flex">
+              <div>
+                <h4 class="card-title"><i class="fa-solid fa-chart-donut"></i> Status Breakdown</h4>
+                <p class="card-subtitle">Completed vs Still Not Done vs Overdue</p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="statusChart"></canvas>
+            </div>
+            <div class="chart-legend-custom" id="statusChartLegend"></div>
+          </div>
+
+          <!-- Chart 2: Time Horizon Bar Chart -->
+          <div class="chart-card">
+            <div class="card-header-flex">
+              <div>
+                <h4 class="card-title"><i class="fa-solid fa-chart-column"></i> Time Horizon Load</h4>
+                <p class="card-subtitle">Activities distribution across Today, Week & Month</p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="horizonChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Chart 3: Category Breakdown -->
+          <div class="chart-card">
+            <div class="card-header-flex">
+              <div>
+                <h4 class="card-title"><i class="fa-solid fa-tags"></i> Priority & Category Mix</h4>
+                <p class="card-subtitle">Task allocation by category and importance</p>
+              </div>
+            </div>
+            <div class="chart-wrapper">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Today's Focus Widget -->
+        <div class="focus-section">
+          <div class="section-header-flex">
+            <div>
+              <h3 class="section-title"><i class="fa-solid fa-list-check text-amber"></i> Quick Action: Today's Priorities</h3>
+              <p class="section-subtitle">Quickly complete or update what matters most right now</p>
+            </div>
+            <button class="btn-subtle" id="viewAllTodayBtn">
+              View In Tasks Table &rarr;
+            </button>
+          </div>
+          <div class="focus-tasks-list" id="dashboardFocusList">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- All Activities / Tasks View Container -->
+      <section class="content-section" id="tasksView" style="display: none;">
+        <!-- Control Bar: Scope tabs, Filters, Sort, View mode -->
+        <div class="task-controls-bar">
+          <!-- Horizon Filter Tabs -->
+          <div class="filter-tabs" id="horizonTabs">
+            <button class="tab-btn active" data-scope="all">
+              <i class="fa-solid fa-layer-group"></i> All Horizons
+            </button>
+            <button class="tab-btn" data-scope="today">
+              <i class="fa-solid fa-sun text-amber"></i> Today
+            </button>
+            <button class="tab-btn" data-scope="week">
+              <i class="fa-solid fa-calendar-week text-indigo"></i> This Week
+            </button>
+            <button class="tab-btn" data-scope="month">
+              <i class="fa-solid fa-calendar-days text-teal"></i> This Month
+            </button>
+            <button class="tab-btn" data-scope="overdue">
+              <i class="fa-solid fa-circle-exclamation text-rose"></i> Overdue
+            </button>
+          </div>
+
+          <!-- Filter Dropdowns & Sorter -->
+          <div class="controls-right">
+            <!-- Status Filter -->
+            <div class="select-group">
+              <label for="filterStatusSelect"><i class="fa-solid fa-filter"></i> Status:</label>
+              <select id="filterStatusSelect" class="form-select-sm">
+                <option value="all">All Statuses</option>
+                <option value="pending">Still Not Done</option>
+                <option value="completed">Completed</option>
+                <option value="overdue">Overdue</option>
+              </select>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="select-group">
+              <label for="filterPrioritySelect">Priority:</label>
+              <select id="filterPrioritySelect" class="form-select-sm">
+                <option value="all">All Priorities</option>
+                <option value="high">High Priority</option>
+                <option value="medium">Medium Priority</option>
+                <option value="low">Low Priority</option>
+              </select>
+            </div>
+
+            <!-- Sort Option -->
+            <div class="select-group">
+              <label for="sortTasksSelect"><i class="fa-solid fa-arrow-down-short-wide"></i> Sort:</label>
+              <select id="sortTasksSelect" class="form-select-sm">
+                <option value="dueDateAsc">Due Date (Earliest)</option>
+                <option value="dueDateDesc">Due Date (Latest)</option>
+                <option value="priorityHigh">Priority (High to Low)</option>
+                <option value="statusPending">Still Not Done First</option>
+                <option value="titleAsc">Title (A-Z)</option>
+              </select>
+            </div>
+
+            <!-- Display Mode: Cards vs Compact Table -->
+            <div class="view-mode-toggle">
+              <button class="icon-toggle active" id="viewModeCards" title="Card Grid View">
+                <i class="fa-solid fa-grip"></i>
+              </button>
+              <button class="icon-toggle" id="viewModeTable" title="Detailed Table View">
+                <i class="fa-solid fa-table-list"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Filter Indicator Bar -->
+        <div class="active-filter-tags" id="activeFilterTags">
+          <!-- Populated when filters are applied -->
+        </div>
+
+        <!-- Task List / Card Grid -->
+        <div class="tasks-container grid-view" id="tasksContainer">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state-card" id="emptyState" style="display: none;">
+          <div class="empty-icon">
+            <i class="fa-solid fa-clipboard-check"></i>
+          </div>
+          <h3 id="emptyStateTitle">No activities found</h3>
+          <p id="emptyStateDesc">You're all clear, or try adjusting your active filters.</p>
+          <button class="btn-primary" id="emptyStateAddBtn">
+            <i class="fa-solid fa-plus"></i> Create New Activity
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal: Add / Edit Activity -->
+  <div class="modal-overlay" id="taskModal" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge" id="modalIconBadge">
+            <i class="fa-solid fa-calendar-plus"></i>
+          </div>
+          <div>
+            <h3 id="modalTitle">New Activity</h3>
+            <p id="modalSubtitle">Create an activity to track today, this week, or this month</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="taskForm" class="modal-body">
+        <input type="hidden" id="taskIdField">
+
+        <!-- Activity Title -->
+        <div class="form-group">
+          <label for="taskTitleInput" class="form-label required">Activity Title</label>
+          <input type="text" id="taskTitleInput" class="form-input" placeholder="e.g., Complete project milestone presentation..." required>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="taskDescInput" class="form-label">Description & Notes</label>
+          <textarea id="taskDescInput" class="form-textarea" rows="2" placeholder="Optional details, checkpoints, or deliverables..."></textarea>
+        </div>
+
+        <!-- Date & Time Horizon row -->
+        <div class="form-row">
+          <div class="form-group col-md-6">
+            <label for="taskDueDateInput" class="form-label required">Due Date</label>
+            <input type="date" id="taskDueDateInput" class="form-input" required>
+            <!-- Quick preset buttons for convenience -->
+            <div class="quick-date-pills">
+              <button type="button" class="date-preset-pill" data-preset="today">Today</button>
+              <button type="button" class="date-preset-pill" data-preset="tomorrow">Tomorrow</button>
+              <button type="button" class="date-preset-pill" data-preset="thisWeek">This Week</button>
+              <button type="button" class="date-preset-pill" data-preset="thisMonth">This Month</button>
+            </div>
+          </div>
+          <div class="form-group col-md-6">
+            <label for="taskDueTimeInput" class="form-label">Due Time</label>
+            <input type="time" id="taskDueTimeInput" class="form-input" value="17:00">
+            <span class="form-hint" id="horizonCalculatedBadge"><i class="fa-solid fa-circle-info"></i> Scope: Today</span>
+          </div>
+        </div>
+
+        <!-- Priority, Category, Status -->
+        <div class="form-row">
+          <div class="form-group col-md-4">
+            <label for="taskPrioritySelect" class="form-label">Priority</label>
+            <select id="taskPrioritySelect" class="form-select">
+              <option value="high">🔴 High Priority</option>
+              <option value="medium" selected>🟡 Medium</option>
+              <option value="low">🔵 Low / Routine</option>
+            </select>
+          </div>
+
+          <div class="form-group col-md-4">
+            <label for="taskCategorySelect" class="form-label">Category</label>
+            <div class="category-input-group">
+              <select id="taskCategorySelect" class="form-select">
+                <option value="Work">💼 Work</option>
+                <option value="Personal">👤 Personal</option>
+                <option value="Study">📚 Study / Learning</option>
+                <option value="Health">💪 Health & Fitness</option>
+                <option value="Finance">💰 Finance</option>
+                <option value="Project">🚀 Project</option>
+                <option value="Other">✨ Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group col-md-4">
+            <label for="taskStatusSelect" class="form-label">Current Status</label>
+            <select id="taskStatusSelect" class="form-select">
+              <option value="pending">⏳ Still Not Done</option>
+              <option value="completed">✅ Completed</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn-subtle" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn-primary" id="saveTaskBtn">
+            <i class="fa-solid fa-check"></i> Save Activity
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Main JavaScript Logic -->
+  <script src="app.js"></script>
+</body>
+</html>
