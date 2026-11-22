@@ -1,45 +1,50 @@
-# TaskHorizon - Modern Time-Horizon To-Do & Activity Tracker
+# TaskHorizon - Executive Activity & Time-Horizon Tracker
 
-An intuitive, visually engaging, responsive web application built to plan, track, and complete activities across three key time horizons:
-- ☀️ **Today** (Next 24 Hours)
-- 📅 **This Week** (Next 7 Days)
-- 🗓️ **This Month** (Current Month Calendar)
-- ⚠️ **Overdue Tracker** (Past-due activities requiring immediate attention)
+A professional, responsive To-Do and Activity Management web application engineered for executive clarity, high productivity, and seamless time-horizon tracking across:
+- ☀️ **Today** (24-Hour Horizon)
+- 📅 **This Week** (7-Day Horizon)
+- 🗓️ **This Month** (30-Day Strategic Horizon)
+- ⚠️ **Overdue Tracker** (Immediate attention items past their scheduled due date)
 
 ---
 
 ## 🌟 Key Features
 
-1. **Time-Horizon Categorization**:
-   - Automatic dynamic categorization for **Today**, **This Week**, and **This Month**.
-   - Automatic detection of **Overdue** tasks (any task whose due date has passed and is still not completed).
+1. **55+ Preloaded Demo Activities**:
+   - Ready for live demonstrations with realistic corporate, technical, and life tasks across **Work**, **Project**, **Finance**, **Health**, **Study**, and **Personal** categories.
+   - Live breakdown:
+     - **12 Today activities** (6 completed, 6 pending)
+     - **18 This Week activities** (5 completed, 13 pending)
+     - **18 This Month activities** (3 completed, 15 pending)
+     - **7 Overdue activities** (highlighted in crimson with instant 1-click "Reschedule to Today" action)
+   - One-click **"55 Demo Tasks"** button in the sidebar footer to instantly reload the dataset anytime during presentations.
 
-2. **Full Activity Lifecycle**:
-   - **Create Activities**: Set title, description/notes, due date, due time, priority (High, Medium, Low), and category (Work, Personal, Study, Health, Finance, Project).
-   - **Update Activities**: Easily edit any activity's parameters, due date, or scope at any time.
-   - **Status Tracking**: Clearly mark activities as **Completed** (with animated confetti celebration!), **Still Not Done**, or **Overdue**.
-   - **Delete & Clear**: Quick delete with confirmation.
+2. **Executive Visual Analytics Dashboard**:
+   - **Progress Radial Ring**: Circular SVG completion meter calculating overall progress velocity in real time.
+   - **4 Time-Horizon Metric Cards**: Dedicated KPI cards for Today, This Week, This Month, and Overdue with animated progress bars and exact date range badges.
+   - **Interactive Chart.js Visualizations**:
+     - 📊 **Status Distribution Doughnut**: Real-time ratio of Completed vs Still Not Done vs Overdue.
+     - 📈 **Time Horizon Load Bar Chart**: Stacked workload comparison across Today, This Week, and This Month.
+     - 🎯 **Category Allocation Mix**: Breakdown across Work, Project, Finance, Health, and Study.
+   - **Today's Quick Focus Section**: Dedicated dashboard checklist to complete today's critical items without switching views.
 
-3. **Visual Dashboard**:
-   - **Overall Completion Ring**: Circular radial progress meter showing percentage of completed tasks.
-   - **Horizon Metric Cards**: Dedicated stat cards for Today, This Week, This Month, and Overdue with progress bars and quick links.
-   - **Interactive Charts (Chart.js)**:
-     - 📊 **Status Breakdown Doughnut**: Completed vs Still Not Done vs Overdue.
-     - 📈 **Time Horizon Load Bar Chart**: Compares pending vs completed load across Today, Week, and Month.
-     - 🎯 **Category & Priority Distribution Chart**: Visual breakdown of your workload by category.
-   - **Quick Action Priority Section**: Instant completion checklist for Today's critical focus items.
+3. **Task Lifecycle & Productivity Tools**:
+   - **Instant Status Toggle**: Single-click checkbox to toggle between Completed and Still Not Done (with animated celebratory confetti!).
+   - **1-Click Reschedule**: Instant `⚡ Today` button on overdue cards to reschedule them to Today without opening modals.
+   - **Overdue Banner**: High-visibility alert banner with a bulk "Reschedule All Overdue to Today" button.
+   - **Clear / Archive Completed**: One-click cleanup to keep boards pristine.
+   - **Search & Filters**: Search with `Ctrl + K` shortcut; filter by status, priority, category, or horizon.
+   - **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View**.
+   - **Print Report**: Instant formatted agenda printing via `@media print`.
 
-4. **User-Friendly & Attractive Interface**:
-   - Modern glassmorphism dark & light theme with smooth toggle.
-   - Responsive design (Mobile, Tablet, Desktop).
-   - Flexible view modes: **Card Grid View** or **Detailed Table View**.
-   - Instant search & multi-parameter filtering (by status, priority, category, and time scope).
-   - LocalStorage persistence (no backend required, works offline).
-   - JSON **Export** and **Import** for backup and data portability.
+4. **Modern Design & Local Persistence**:
+   - Polished Obsidian Dark Theme & Quartz Light Theme toggle with smooth transitions.
+   - Automatic `localStorage` persistence and JSON Export / Import for backup.
 
 ---
 
-## 🚀 How to Run the App
+## 🚀 Running the App
 
-1. Double-click or open `index.html` in any modern web browser (Google Chrome, Microsoft Edge, Firefox, Safari, Brave).
-2. No installation, npm setup, or local server required! Everything runs out of the box with zero dependencies.
+1. Navigate to the project directory: `c:\Users\dhana\ToDo\ToDoApp\`
+2. Double-click or open [index.html](file:///c:/Users/dhana/ToDo/ToDoApp/index.html) in any modern browser (Chrome, Edge, Firefox, Brave, Safari).
+3. Zero installation or server dependencies required!

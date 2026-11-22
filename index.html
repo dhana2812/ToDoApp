@@ -3,16 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskHorizon | Today, Week & Month Activity Tracker</title>
-  <meta name="description" content="A modern, intuitive To-Do and Activity Tracker for Today, This Week, and This Month with visual dashboard and analytics.">
+  <title>TaskHorizon | Executive Activity & Horizon Tracker</title>
+  <meta name="description" content="A professional, high-performance To-Do and Activity Tracker for Today, This Week, and This Month with visual dashboard and analytics.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <!-- FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <!-- FontAwesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Chart.js for Visual Dashboard -->
+  <!-- Chart.js for High-Res Visual Dashboard -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <!-- Canvas Confetti for completion celebration -->
+  <!-- Canvas Confetti for task completion celebration -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
@@ -27,16 +27,16 @@
           </div>
           <div class="logo-text">
             <h2>TaskHorizon</h2>
-            <span class="subtitle">Time-Horizon Planner</span>
+            <span class="subtitle">Executive Horizon Planner</span>
           </div>
         </div>
-        <button class="mobile-toggle" id="closeSidebarBtn" aria-label="Close sidebar">
+        <button class="mobile-toggle" id="closeSidebarBtn" aria-label="Close navigation sidebar">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <div class="sidebar-nav">
-        <div class="nav-section-title">Views</div>
+        <div class="nav-section-title">Navigation</div>
         <button class="nav-btn active" data-view="dashboard">
           <i class="fa-solid fa-chart-pie"></i>
           <span>Visual Dashboard</span>
@@ -49,23 +49,46 @@
 
         <div class="nav-section-title">Time Horizons</div>
         <button class="nav-btn" data-filter-scope="today">
-          <i class="fa-solid fa-sun text-amber"></i>
-          <span>Today</span>
-          <span class="badge-count" id="countToday">0</span>
+          <div class="nav-btn-icon text-amber">
+            <i class="fa-solid fa-sun"></i>
+          </div>
+          <div class="nav-btn-text">
+            <span>Today</span>
+            <small class="nav-date-sub" id="navSubToday">24 Hours</small>
+          </div>
+          <span class="badge-count badge-amber" id="countToday">0</span>
         </button>
+
         <button class="nav-btn" data-filter-scope="week">
-          <i class="fa-solid fa-calendar-week text-indigo"></i>
-          <span>This Week</span>
-          <span class="badge-count" id="countWeek">0</span>
+          <div class="nav-btn-icon text-indigo">
+            <i class="fa-solid fa-calendar-week"></i>
+          </div>
+          <div class="nav-btn-text">
+            <span>This Week</span>
+            <small class="nav-date-sub" id="navSubWeek">7 Days</small>
+          </div>
+          <span class="badge-count badge-indigo" id="countWeek">0</span>
         </button>
+
         <button class="nav-btn" data-filter-scope="month">
-          <i class="fa-solid fa-calendar-days text-teal"></i>
-          <span>This Month</span>
-          <span class="badge-count" id="countMonth">0</span>
+          <div class="nav-btn-icon text-teal">
+            <i class="fa-solid fa-calendar-days"></i>
+          </div>
+          <div class="nav-btn-text">
+            <span>This Month</span>
+            <small class="nav-date-sub" id="navSubMonth">30 Days</small>
+          </div>
+          <span class="badge-count badge-teal" id="countMonth">0</span>
         </button>
+
         <button class="nav-btn" data-filter-scope="overdue">
-          <i class="fa-solid fa-triangle-exclamation text-rose"></i>
-          <span>Overdue</span>
+          <div class="nav-btn-icon text-rose">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="nav-btn-text">
+            <span>Overdue</span>
+            <small class="nav-date-sub">Requires Action</small>
+          </div>
           <span class="badge-count badge-rose" id="countOverdue">0</span>
         </button>
 
@@ -76,8 +99,21 @@
       </div>
 
       <div class="sidebar-footer">
+        <div class="productivity-mini-card">
+          <div class="prod-top">
+            <span class="prod-label"><i class="fa-solid fa-gauge-high"></i> Completion Rate</span>
+            <span class="prod-val" id="sidebarProdRate">0%</span>
+          </div>
+          <div class="prod-bar">
+            <div class="prod-fill" id="sidebarProdFill" style="width: 0%"></div>
+          </div>
+        </div>
+
         <div class="data-actions">
-          <button class="btn-subtle" id="exportDataBtn" title="Backup activities to JSON file">
+          <button class="btn-subtle" id="loadDemoDataBtn" title="Reload 55 realistic demo activities">
+            <i class="fa-solid fa-wand-magic-sparkles text-amber"></i> 55 Demo Tasks
+          </button>
+          <button class="btn-subtle" id="exportDataBtn" title="Export activities to JSON">
             <i class="fa-solid fa-file-export"></i> Export
           </button>
           <label class="btn-subtle file-label" title="Import activities from JSON file">
@@ -88,9 +124,12 @@
             <i class="fa-solid fa-rotate-left"></i> Reset
           </button>
         </div>
+
         <div class="theme-toggle-wrapper">
-          <span class="theme-label"><i class="fa-solid fa-moon"></i> Dark Theme</span>
-          <label class="switch">
+          <span class="theme-label" id="themeLabelText">
+            <i class="fa-solid fa-moon"></i> Dark Theme
+          </span>
+          <label class="switch" title="Toggle Light / Dark mode">
             <input type="checkbox" id="themeToggleCheckbox" checked>
             <span class="slider round"></span>
           </label>
@@ -103,11 +142,16 @@
       <!-- Top Navbar -->
       <header class="top-navbar">
         <div class="top-nav-left">
-          <button class="mobile-toggle open-sidebar-btn" id="openSidebarBtn" aria-label="Open navigation">
+          <button class="mobile-toggle open-sidebar-btn" id="openSidebarBtn" aria-label="Open navigation sidebar">
             <i class="fa-solid fa-bars"></i>
           </button>
           <div class="current-date-info">
-            <h1 id="pageTitle">Dashboard</h1>
+            <div class="page-title-row">
+              <h1 id="pageTitle">Executive Dashboard</h1>
+              <span class="status-pulse-badge" id="systemStatusBadge">
+                <span class="pulse-dot"></span> Active Session
+              </span>
+            </div>
             <p id="pageCurrentDate">Saturday, November 21, 2026</p>
           </div>
         </div>
@@ -115,9 +159,14 @@
         <div class="top-nav-right">
           <div class="search-box">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input type="text" id="globalSearchInput" placeholder="Search tasks, categories, tags...">
-            <button id="clearSearchBtn" class="clear-btn" style="display:none;">&times;</button>
+            <input type="text" id="globalSearchInput" placeholder="Search tasks, categories, tags (Ctrl + K)...">
+            <span class="search-shortcut-badge">⌘K</span>
+            <button id="clearSearchBtn" class="clear-btn" style="display:none;" title="Clear search">&times;</button>
           </div>
+          <button class="btn-subtle print-hide" id="printReportBtn" title="Print daily agenda report">
+            <i class="fa-solid fa-print"></i>
+            <span>Print Report</span>
+          </button>
           <button class="btn-primary" id="openAddModalBtn">
             <i class="fa-solid fa-plus"></i>
             <span>Add Activity</span>
@@ -125,21 +174,50 @@
         </div>
       </header>
 
+      <!-- Overdue Quick Action Callout (Displays when overdue > 0) -->
+      <div class="alert-callout" id="overdueCalloutBanner" style="display: none;">
+        <div class="alert-callout-content">
+          <div class="alert-icon-box">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div class="alert-text-group">
+            <strong id="overdueCalloutTitle">Attention: Overdue Activities Detected</strong>
+            <p id="overdueCalloutDesc">You have activities past their scheduled due date. Would you like to review or reschedule them?</p>
+          </div>
+        </div>
+        <div class="alert-callout-actions">
+          <button class="btn-alert-reschedule" id="rescheduleAllOverdueBtn">
+            <i class="fa-solid fa-calendar-check"></i> Reschedule to Today
+          </button>
+          <button class="btn-alert-review" id="viewOverdueBannerBtn">
+            Review Now &rarr;
+          </button>
+        </div>
+      </div>
+
       <!-- Dashboard View Container -->
       <section class="content-section" id="dashboardView">
         <!-- Hero Horizon Banner -->
         <div class="dashboard-hero-card">
           <div class="hero-left">
             <div class="hero-greeting">
-              <span class="greeting-badge"><i class="fa-solid fa-bolt"></i> Horizon Status</span>
-              <h2 id="heroGreetingText">Welcome! Here's your activity outlook.</h2>
-              <p id="heroSummaryText">Loading your schedule...</p>
+              <span class="greeting-badge"><i class="fa-solid fa-bolt"></i> Productivity Outlook</span>
+              <h2 id="heroGreetingText">Good day! Here's your executive activity outlook.</h2>
+              <p id="heroSummaryText">Loading your schedule and analytics...</p>
             </div>
             <div class="quick-horizon-pills">
-              <span class="horizon-pill today-pill" id="heroTodayPill"><i class="fa-solid fa-sun"></i> Today: <strong>0</strong></span>
-              <span class="horizon-pill week-pill" id="heroWeekPill"><i class="fa-solid fa-calendar-week"></i> This Week: <strong>0</strong></span>
-              <span class="horizon-pill month-pill" id="heroMonthPill"><i class="fa-solid fa-calendar-days"></i> This Month: <strong>0</strong></span>
-              <span class="horizon-pill overdue-pill" id="heroOverduePill"><i class="fa-solid fa-circle-exclamation"></i> Overdue: <strong>0</strong></span>
+              <span class="horizon-pill today-pill" id="heroTodayPill" title="Filter Today">
+                <i class="fa-solid fa-sun"></i> Today: <strong>0</strong>
+              </span>
+              <span class="horizon-pill week-pill" id="heroWeekPill" title="Filter This Week">
+                <i class="fa-solid fa-calendar-week"></i> This Week: <strong>0</strong>
+              </span>
+              <span class="horizon-pill month-pill" id="heroMonthPill" title="Filter This Month">
+                <i class="fa-solid fa-calendar-days"></i> This Month: <strong>0</strong>
+              </span>
+              <span class="horizon-pill overdue-pill" id="heroOverduePill" title="Filter Overdue">
+                <i class="fa-solid fa-circle-exclamation"></i> Overdue: <strong>0</strong>
+              </span>
             </div>
           </div>
           <div class="hero-progress-ring">
@@ -156,7 +234,7 @@
           </div>
         </div>
 
-        <!-- 4 Metric Cards -->
+        <!-- 4 Metric Horizon Cards -->
         <div class="metrics-grid">
           <!-- Metric: Today -->
           <div class="metric-card metric-today" data-filter="today">
@@ -164,7 +242,7 @@
               <div class="metric-icon-box bg-amber-soft">
                 <i class="fa-solid fa-sun text-amber"></i>
               </div>
-              <span class="metric-chip">Horizon: 24 Hours</span>
+              <span class="metric-chip" id="chipTodayDate">24 Hours</span>
             </div>
             <div class="metric-value-box">
               <h3 id="statTodayTotal">0</h3>
@@ -185,7 +263,7 @@
               <div class="metric-icon-box bg-indigo-soft">
                 <i class="fa-solid fa-calendar-week text-indigo"></i>
               </div>
-              <span class="metric-chip">Horizon: 7 Days</span>
+              <span class="metric-chip" id="chipWeekDate">7 Days</span>
             </div>
             <div class="metric-value-box">
               <h3 id="statWeekTotal">0</h3>
@@ -206,7 +284,7 @@
               <div class="metric-icon-box bg-teal-soft">
                 <i class="fa-solid fa-calendar-days text-teal"></i>
               </div>
-              <span class="metric-chip">Horizon: 30 Days</span>
+              <span class="metric-chip" id="chipMonthDate">30 Days</span>
             </div>
             <div class="metric-value-box">
               <h3 id="statMonthTotal">0</h3>
@@ -227,7 +305,7 @@
               <div class="metric-icon-box bg-rose-soft">
                 <i class="fa-solid fa-triangle-exclamation text-rose"></i>
               </div>
-              <span class="metric-chip chip-rose">Needs Attention</span>
+              <span class="metric-chip chip-rose" id="chipOverdueAlert">Needs Attention</span>
             </div>
             <div class="metric-value-box">
               <h3 id="statOverdueTotal">0</h3>
@@ -237,19 +315,19 @@
               <div class="progress-fill fill-rose" id="barOverdueAlert" style="width: 100%"></div>
             </div>
             <div class="metric-footer">
-              <span id="statOverdueAdvice">Pass due date</span>
+              <span id="statOverdueAdvice">Past scheduled date</span>
               <span class="action-link" id="viewOverdueLink">Review &rarr;</span>
             </div>
           </div>
         </div>
 
-        <!-- Visual Charts Grid -->
+        <!-- Visual Analytics Charts Row -->
         <div class="charts-row">
           <!-- Chart 1: Status Distribution Doughnut -->
           <div class="chart-card">
             <div class="card-header-flex">
               <div>
-                <h4 class="card-title"><i class="fa-solid fa-chart-donut"></i> Status Breakdown</h4>
+                <h4 class="card-title"><i class="fa-solid fa-chart-pie text-indigo"></i> Status Distribution</h4>
                 <p class="card-subtitle">Completed vs Still Not Done vs Overdue</p>
               </div>
             </div>
@@ -263,8 +341,8 @@
           <div class="chart-card">
             <div class="card-header-flex">
               <div>
-                <h4 class="card-title"><i class="fa-solid fa-chart-column"></i> Time Horizon Load</h4>
-                <p class="card-subtitle">Activities distribution across Today, Week & Month</p>
+                <h4 class="card-title"><i class="fa-solid fa-chart-column text-teal"></i> Time Horizon Workload</h4>
+                <p class="card-subtitle">Activity volume across Today, Week & Month</p>
               </div>
             </div>
             <div class="chart-wrapper">
@@ -276,8 +354,8 @@
           <div class="chart-card">
             <div class="card-header-flex">
               <div>
-                <h4 class="card-title"><i class="fa-solid fa-tags"></i> Priority & Category Mix</h4>
-                <p class="card-subtitle">Task allocation by category and importance</p>
+                <h4 class="card-title"><i class="fa-solid fa-tags text-amber"></i> Category Allocation</h4>
+                <p class="card-subtitle">Work, Personal, Projects, and Financial items</p>
               </div>
             </div>
             <div class="chart-wrapper">
@@ -286,12 +364,12 @@
           </div>
         </div>
 
-        <!-- Dashboard Today's Focus Widget -->
+        <!-- Today's Quick Focus Section -->
         <div class="focus-section">
           <div class="section-header-flex">
             <div>
-              <h3 class="section-title"><i class="fa-solid fa-list-check text-amber"></i> Quick Action: Today's Priorities</h3>
-              <p class="section-subtitle">Quickly complete or update what matters most right now</p>
+              <h3 class="section-title"><i class="fa-solid fa-bolt text-amber"></i> Quick Action: Today's Priorities</h3>
+              <p class="section-subtitle">Instantly complete, edit or reschedule what matters most today</p>
             </div>
             <button class="btn-subtle" id="viewAllTodayBtn">
               View In Tasks Table &rarr;
@@ -307,22 +385,27 @@
       <section class="content-section" id="tasksView" style="display: none;">
         <!-- Control Bar: Scope tabs, Filters, Sort, View mode -->
         <div class="task-controls-bar">
-          <!-- Horizon Filter Tabs -->
+          <!-- Horizon Filter Tabs (Segmented Control) -->
           <div class="filter-tabs" id="horizonTabs">
             <button class="tab-btn active" data-scope="all">
               <i class="fa-solid fa-layer-group"></i> All Horizons
+              <span class="tab-badge" id="tabCountAll">0</span>
             </button>
             <button class="tab-btn" data-scope="today">
               <i class="fa-solid fa-sun text-amber"></i> Today
+              <span class="tab-badge" id="tabCountToday">0</span>
             </button>
             <button class="tab-btn" data-scope="week">
               <i class="fa-solid fa-calendar-week text-indigo"></i> This Week
+              <span class="tab-badge" id="tabCountWeek">0</span>
             </button>
             <button class="tab-btn" data-scope="month">
               <i class="fa-solid fa-calendar-days text-teal"></i> This Month
+              <span class="tab-badge" id="tabCountMonth">0</span>
             </button>
-            <button class="tab-btn" data-scope="overdue">
+            <button class="tab-btn tab-btn-overdue" data-scope="overdue">
               <i class="fa-solid fa-circle-exclamation text-rose"></i> Overdue
+              <span class="tab-badge badge-rose" id="tabCountOverdue">0</span>
             </button>
           </div>
 
@@ -333,9 +416,9 @@
               <label for="filterStatusSelect"><i class="fa-solid fa-filter"></i> Status:</label>
               <select id="filterStatusSelect" class="form-select-sm">
                 <option value="all">All Statuses</option>
-                <option value="pending">Still Not Done</option>
-                <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
+                <option value="pending">⏳ Still Not Done</option>
+                <option value="completed">✅ Completed</option>
+                <option value="overdue">⚠️ Overdue</option>
               </select>
             </div>
 
@@ -344,9 +427,9 @@
               <label for="filterPrioritySelect">Priority:</label>
               <select id="filterPrioritySelect" class="form-select-sm">
                 <option value="all">All Priorities</option>
-                <option value="high">High Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="low">Low Priority</option>
+                <option value="high">🔴 High</option>
+                <option value="medium">🟡 Medium</option>
+                <option value="low">🔵 Low</option>
               </select>
             </div>
 
@@ -362,15 +445,21 @@
               </select>
             </div>
 
-            <!-- Display Mode: Cards vs Compact Table -->
+            <!-- Display Mode: Cards vs Detailed Table -->
             <div class="view-mode-toggle">
               <button class="icon-toggle active" id="viewModeCards" title="Card Grid View">
                 <i class="fa-solid fa-grip"></i>
               </button>
-              <button class="icon-toggle" id="viewModeTable" title="Detailed Table View">
+              <button class="icon-toggle" id="viewModeTable" title="Executive Table View">
                 <i class="fa-solid fa-table-list"></i>
               </button>
             </div>
+
+            <!-- Clear Completed Action -->
+            <button class="btn-subtle" id="clearCompletedBtn" title="Archive or clear all completed tasks">
+              <i class="fa-solid fa-broom"></i>
+              <span>Clear Completed</span>
+            </button>
           </div>
         </div>
 
@@ -421,13 +510,13 @@
         <!-- Activity Title -->
         <div class="form-group">
           <label for="taskTitleInput" class="form-label required">Activity Title</label>
-          <input type="text" id="taskTitleInput" class="form-input" placeholder="e.g., Complete project milestone presentation..." required>
+          <input type="text" id="taskTitleInput" class="form-input" placeholder="e.g., Deliver quarterly sprint review presentation..." required>
         </div>
 
         <!-- Description -->
         <div class="form-group">
-          <label for="taskDescInput" class="form-label">Description & Notes</label>
-          <textarea id="taskDescInput" class="form-textarea" rows="2" placeholder="Optional details, checkpoints, or deliverables..."></textarea>
+          <label for="taskDescInput" class="form-label">Description & Checkpoints</label>
+          <textarea id="taskDescInput" class="form-textarea" rows="2" placeholder="Optional details, deliverables, or checklist notes..."></textarea>
         </div>
 
         <!-- Date & Time Horizon row -->
@@ -487,10 +576,13 @@
 
         <!-- Modal Footer -->
         <div class="modal-footer">
-          <button type="button" class="btn-subtle" id="cancelModalBtn">Cancel</button>
-          <button type="submit" class="btn-primary" id="saveTaskBtn">
-            <i class="fa-solid fa-check"></i> Save Activity
-          </button>
+          <span class="modal-shortcut-hint">Press <strong>Ctrl + Enter</strong> to save</span>
+          <div class="modal-footer-btns">
+            <button type="button" class="btn-subtle" id="cancelModalBtn">Cancel</button>
+            <button type="submit" class="btn-primary" id="saveTaskBtn">
+              <i class="fa-solid fa-check"></i> Save Activity
+            </button>
+          </div>
         </div>
       </form>
     </div>
