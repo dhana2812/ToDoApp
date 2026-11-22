@@ -117,6 +117,7 @@ function getEndOfMonth(date = new Date()) {
 // Check if a task is overdue
 function isTaskOverdue(task) {
   if (task.status === 'completed') return false;
+  if (task.status === 'overdue') return true;
   if (!task.dueDate) return false;
   const taskDate = parseDate(task.dueDate);
   const startOfToday = getStartOfToday();
@@ -129,28 +130,59 @@ function isTaskToday(task) {
   return task.dueDate === formatDateToYYYYMMDD(new Date());
 }
 
-// Check if task is scheduled for This Week (Calendar week or within next 7 days)
+// Check if task is scheduled for This Week (upcoming days within next 7 days, excluding overdue and today)
 function isTaskThisWeek(task) {
   if (!task.dueDate) return false;
+  if (isTaskToday(task)) return false;
+  if (isTaskOverdue(task)) return false;
+
   const taskDate = parseDate(task.dueDate);
-  const now = new Date();
-  const weekStart = getStartOfWeek(now);
-  const weekEnd = getEndOfWeek(now);
-  const inCalWeek = taskDate >= weekStart && taskDate <= weekEnd;
   const todayStart = getStartOfToday();
-  const inNext7Days = taskDate >= todayStart && taskDate <= new Date(todayStart.getTime() + 7 * 86400000);
-  return inCalWeek || inNext7Days;
+  const next7DaysEnd = new Date(todayStart.getTime() + 7 * 86400000);
+  next7DaysEnd.setHours(23, 59, 59, 999);
+
+  return taskDate > todayStart && taskDate <= next7DaysEnd;
 }
 
-// Check if task is scheduled for This Month (Calendar month or within next 30 days)
+// Check if task is scheduled for This Month (beyond this week, within next 30 days, excluding overdue and today)
 function isTaskThisMonth(task) {
   if (!task.dueDate) return false;
+  if (isTaskToday(task)) return false;
+  if (isTaskThisWeek(task)) return false;
+  if (isTaskOverdue(task)) return false;
+
   const taskDate = parseDate(task.dueDate);
-  const now = new Date();
-  const inCalMonth = taskDate.getFullYear() === now.getFullYear() && taskDate.getMonth() === now.getMonth();
   const todayStart = getStartOfToday();
-  const inNext30Days = taskDate >= todayStart && taskDate <= new Date(todayStart.getTime() + 30 * 86400000);
-  return inCalMonth || inNext30Days;
+  const next30DaysEnd = new Date(todayStart.getTime() + 30 * 86400000);
+  next30DaysEnd.setHours(23, 59, 59, 999);
+
+  return taskDate > todayStart && taskDate <= next30DaysEnd;
+}
+
+// Get primary horizon identifier for any task
+function getTaskHorizon(task) {
+  if (isTaskOverdue(task)) return 'overdue';
+  if (isTaskToday(task)) return 'today';
+  if (isTaskThisWeek(task)) return 'week';
+  if (isTaskThisMonth(task)) return 'month';
+  return 'future';
+}
+
+// Get task horizon metadata for badges and UI rendering
+function getTaskHorizonMeta(task) {
+  const horizon = getTaskHorizon(task);
+  switch (horizon) {
+    case 'overdue':
+      return { label: '⚠️ Overdue', badgeClass: 'badge-rose', scopeClass: 'scope-overdue' };
+    case 'today':
+      return { label: '☀️ Today', badgeClass: 'badge-amber', scopeClass: 'scope-today' };
+    case 'week':
+      return { label: '📅 This Week', badgeClass: 'badge-indigo', scopeClass: 'scope-week' };
+    case 'month':
+      return { label: '🗓️ This Month', badgeClass: 'badge-teal', scopeClass: 'scope-month' };
+    default:
+      return { label: '🔮 Upcoming', badgeClass: 'badge-scope', scopeClass: 'scope-future' };
+  }
 }
 
 // Format relative date display
@@ -164,9 +196,9 @@ function formatFriendlyDueDate(dateStr, timeStr = '') {
 
   if (diffDays === 0) return `Today${timeDisplay}`;
   if (diffDays === 1) return `Tomorrow${timeDisplay}`;
-  if (diffDays === -1) return `Yesterday${timeDisplay}`;
-  if (diffDays < -1) return `${Math.abs(diffDays)}d overdue`;
-  if (diffDays < 7) {
+  if (diffDays === -1) return `Yesterday (Overdue)${timeDisplay}`;
+  if (diffDays < -1) return `${Math.abs(diffDays)}d overdue${timeDisplay}`;
+  if (diffDays < 7 && diffDays > 0) {
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     return `${dayNames[taskDate.getDay()]}${timeDisplay}`;
   }
@@ -894,7 +926,7 @@ function getFilteredAndSortedTasks() {
   if (state.filters.status === 'completed') {
     list = list.filter(t => t.status === 'completed');
   } else if (state.filters.status === 'pending') {
-    list = list.filter(t => t.status !== 'completed' && !isTaskOverdue(t));
+    list = list.filter(t => t.status !== 'completed');
   } else if (state.filters.status === 'overdue') {
     list = list.filter(isTaskOverdue);
   }
@@ -1455,21 +1487,7 @@ function renderGridView(container, tasks) {
     const isCompleted = task.status === 'completed';
     const isOverdue = isTaskOverdue(task);
     const isToday = isTaskToday(task);
-    const isWeek = isTaskThisWeek(task);
-    const isMonth = isTaskThisMonth(task);
-
-    let horizonLabel = 'Horizon';
-    let horizonClass = '';
-    if (isToday) {
-      horizonLabel = '☀️ Today';
-      horizonClass = 'scope-today';
-    } else if (isWeek) {
-      horizonLabel = '📅 This Week';
-      horizonClass = 'scope-week';
-    } else if (isMonth) {
-      horizonLabel = '🗓️ This Month';
-      horizonClass = 'scope-month';
-    }
+    const horizonMeta = getTaskHorizonMeta(task);
 
     let statusClass = 'status-badge-pending';
     let statusLabel = '⏳ Still Not Done';
@@ -1490,7 +1508,7 @@ function renderGridView(container, tasks) {
           <div class="task-title-group">
             <h4 class="task-title">${escapeHtml(task.title)}</h4>
             <div class="task-card-meta">
-              <span class="badge badge-scope ${horizonClass}">${horizonLabel}</span>
+              <span class="badge ${horizonMeta.badgeClass}">${horizonMeta.label}</span>
               <span class="badge ${getPriorityBadgeClass(task.priority)}">${capitalize(task.priority)}</span>
               <span class="badge ${statusClass}">${statusLabel}</span>
             </div>
@@ -1500,7 +1518,7 @@ function renderGridView(container, tasks) {
         ${task.description ? `<p class="task-desc">${escapeHtml(task.description)}</p>` : ''}
 
         <div class="task-card-footer">
-          <div class="task-due-info ${isOverdue ? 'text-rose' : ''}">
+          <div class="task-due-info ${isOverdue ? 'text-rose font-semibold' : ''}">
             <i class="fa-regular fa-calendar"></i>
             <span>${formatFriendlyDueDate(task.dueDate, task.dueTime)}</span>
           </div>
@@ -1545,6 +1563,7 @@ function renderTableView(container, tasks) {
           const isCompleted = task.status === 'completed';
           const isOverdue = isTaskOverdue(task);
           const isToday = isTaskToday(task);
+          const horizonMeta = getTaskHorizonMeta(task);
 
           let statusBadge = isCompleted 
             ? '<span class="badge status-badge-completed">Completed</span>'
@@ -1552,16 +1571,8 @@ function renderTableView(container, tasks) {
               ? '<span class="badge status-badge-overdue">Overdue</span>'
               : '<span class="badge status-badge-pending">Still Not Done</span>';
 
-          let horizonBadge = isToday 
-            ? '<span class="badge scope-today">☀️ Today</span>'
-            : isTaskThisWeek(task)
-              ? '<span class="badge scope-week">📅 This Week</span>'
-              : isTaskThisMonth(task)
-                ? '<span class="badge scope-month">🗓️ This Month</span>'
-                : '<span class="badge">Future</span>';
-
           return `
-            <tr>
+            <tr class="${isOverdue ? 'row-overdue' : ''}">
               <td>
                 <input type="checkbox" class="task-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''}>
               </td>
@@ -1569,8 +1580,8 @@ function renderTableView(container, tasks) {
                 <span class="task-title" style="${isCompleted ? 'text-decoration: line-through; color: var(--text-subtle);' : ''}">${escapeHtml(task.title)}</span>
                 ${task.description ? `<br><small style="color:var(--text-muted); font-size:0.78rem;">${escapeHtml(task.description)}</small>` : ''}
               </td>
-              <td>${horizonBadge}</td>
-              <td class="${isOverdue ? 'text-rose' : ''}">
+              <td><span class="badge ${horizonMeta.badgeClass}">${horizonMeta.label}</span></td>
+              <td class="${isOverdue ? 'text-rose font-semibold' : ''}">
                 ${formatFriendlyDueDate(task.dueDate, task.dueTime)}
               </td>
               <td>
@@ -1903,9 +1914,15 @@ function switchView(viewName) {
   const calendarSec = document.getElementById('calendarView');
   const pageTitle = document.getElementById('pageTitle');
 
-  document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => {
+  document.querySelectorAll('.sidebar-nav .nav-btn[data-view]').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-view') === viewName);
   });
+
+  if (viewName !== 'all-tasks') {
+    document.querySelectorAll('.sidebar-nav .nav-btn[data-filter-scope]').forEach(btn => {
+      btn.classList.remove('active');
+    });
+  }
 
   if (viewName === 'dashboard') {
     dashboardSec.style.display = 'flex';
@@ -1930,10 +1947,22 @@ function switchView(viewName) {
 
 function filterByScope(scope) {
   state.filters.scope = scope;
+
+  // If filtering by overdue, reset completed status filter so overdue items are visible
+  if (scope === 'overdue' && state.filters.status === 'completed') {
+    state.filters.status = 'all';
+    const filterStatusSelect = document.getElementById('filterStatusSelect');
+    if (filterStatusSelect) filterStatusSelect.value = 'all';
+  }
+
   switchView('all-tasks');
 
   document.querySelectorAll('#horizonTabs .tab-btn').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('data-scope') === scope);
+  });
+
+  document.querySelectorAll('.sidebar-nav .nav-btn[data-filter-scope]').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('data-filter-scope') === scope);
   });
 
   renderTasksList();
@@ -2010,26 +2039,31 @@ function renderCalendar() {
     const isToday = cell.dateStr === todayStr;
     const isSelected = cell.dateStr === state.selectedCalendarDate;
     const dayTasks = state.tasks.filter(t => t.dueDate === cell.dateStr);
+    const hasOverdue = dayTasks.some(isTaskOverdue);
 
     const visibleTasks = dayTasks.slice(0, 3);
     const moreCount = dayTasks.length - 3;
 
     return `
-      <div class="calendar-cell ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''} ${cell.isOtherMonth ? 'other-month' : ''}" data-cal-date="${cell.dateStr}">
+      <div class="calendar-cell ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''} ${cell.isOtherMonth ? 'other-month' : ''} ${hasOverdue ? 'has-overdue' : ''}" data-cal-date="${cell.dateStr}">
         <div class="cal-cell-header">
           <span class="cal-cell-day-num">${cell.dayNum}</span>
-          ${dayTasks.length > 0 ? `<span class="cal-cell-count-tag">${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}</span>` : ''}
+          <div style="display:flex; align-items:center; gap:4px;">
+            ${hasOverdue ? `<span class="cal-overdue-tag" title="Contains overdue activities">⚠️ Past Due</span>` : ''}
+            ${dayTasks.length > 0 ? `<span class="cal-cell-count-tag">${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}</span>` : ''}
+          </div>
         </div>
         <div class="cal-task-chips">
           ${visibleTasks.map(t => {
             const isDone = t.status === 'completed';
             const isOverdue = isTaskOverdue(t);
             let dotColor = '#38bdf8';
-            if (t.priority === 'high') dotColor = '#f43f5e';
-            if (t.priority === 'medium') dotColor = '#f59e0b';
+            if (isOverdue) dotColor = '#e11d48';
+            else if (t.priority === 'high') dotColor = '#f43f5e';
+            else if (t.priority === 'medium') dotColor = '#f59e0b';
 
             return `
-              <div class="cal-chip ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" data-task-id="${t.id}" title="${escapeHtml(t.title)} (${capitalize(t.priority)} Priority)">
+              <div class="cal-chip ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" data-task-id="${t.id}" title="${escapeHtml(t.title)} (${isOverdue ? 'Overdue - ' : ''}${capitalize(t.priority)} Priority)">
                 <span style="width:5px; height:5px; border-radius:50%; background:${dotColor}; flex-shrink:0; display:inline-block;"></span>
                 <span>${escapeHtml(t.title)}</span>
               </div>
@@ -2077,23 +2111,33 @@ function renderDayInspector() {
   listEl.innerHTML = dayTasks.map(task => {
     const isCompleted = task.status === 'completed';
     const isOverdue = isTaskOverdue(task);
+    const isToday = isTaskToday(task);
+    const horizonMeta = getTaskHorizonMeta(task);
 
     return `
       <div class="inspector-task-card ${isCompleted ? 'is-completed' : ''} ${isOverdue ? 'is-overdue' : ''}">
         <div class="inspector-task-top">
           <input type="checkbox" class="task-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''} title="Toggle completed">
-          <span class="inspector-task-title">${escapeHtml(task.title)}</span>
-          <button class="action-icon-btn btn-edit" data-edit-id="${task.id}" title="Edit activity">
-            <i class="fa-solid fa-pen"></i>
-          </button>
+          <span class="inspector-task-title ${isCompleted ? 'text-line-through' : ''}">${escapeHtml(task.title)}</span>
+          <div style="display:inline-flex; gap:6px; align-items:center; margin-left:auto;">
+            ${isOverdue || (!isToday && !isCompleted) ? `
+              <button class="btn-quick-reschedule" data-reschedule-id="${task.id}" title="Reschedule to Today">
+                <i class="fa-solid fa-calendar-check text-amber"></i> Today
+              </button>
+            ` : ''}
+            <button class="action-icon-btn btn-edit" data-edit-id="${task.id}" title="Edit activity">
+              <i class="fa-solid fa-pen"></i>
+            </button>
+          </div>
         </div>
         ${task.description ? `<p style="font-size:0.78rem; color:var(--text-muted); line-height:1.4; padding-left:26px;">${escapeHtml(task.description)}</p>` : ''}
         <div class="inspector-task-meta" style="padding-left:26px;">
-          <div style="display:flex; gap:6px; align-items:center;">
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span class="badge ${horizonMeta.badgeClass}">${horizonMeta.label}</span>
             <span class="badge ${getPriorityBadgeClass(task.priority)}">${capitalize(task.priority)}</span>
             <span class="badge badge-scope">${escapeHtml(task.category || 'General')}</span>
           </div>
-          <span>${task.dueTime ? formatTime(task.dueTime) : 'All Day'}</span>
+          <span class="${isOverdue ? 'text-rose font-semibold' : ''}">${isOverdue ? formatFriendlyDueDate(task.dueDate, task.dueTime) : (task.dueTime ? formatTime(task.dueTime) : 'All Day')}</span>
         </div>
       </div>
     `;

@@ -45,11 +45,16 @@ A professional, responsive To-Do and Activity Management web application enginee
 
 3. **Task Lifecycle & Productivity Tools**:
    - **Instant Status Toggle**: Single-click checkbox to toggle between Completed and Still Not Done (with animated celebratory confetti!).
+   - **Overdue Task Tracking & Zero-Overlap Horizons**:
+     - Strict mutually exclusive horizon classification: Overdue items are isolated to their own dedicated horizon (`badge-rose`) and excluded from upcoming Week/Month buckets.
+     - Live count partition across 55 tasks: Today (12), This Week (18), This Month (18), Overdue (7) = 55 total.
+     - Calendar cells with past-due tasks display a `⚠️ Past Due` badge and soft pastel rose highlight.
+     - Day Inspector side drawer displays overdue badges, relative due times (`Yesterday (Overdue)`, `3d overdue`), and 1-click `⚡ Today` reschedule buttons.
    - **1-Click Reschedule**: Instant `⚡ Today` button on overdue cards to reschedule them to Today without opening modals.
    - **Overdue Banner**: High-visibility alert banner with a bulk "Reschedule All Overdue to Today" button.
    - **Clear / Archive Completed**: One-click cleanup to keep boards pristine.
    - **Search & Filters**: Search with `Ctrl + K` shortcut; filter by status, priority, category, or horizon.
-   - **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View**.
+   - **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View** with overdue row tinting.
    - **Print Report**: Instant formatted agenda printing via `@media print`.
 
 4. **Executive Pastel Design System & Local Persistence**:
@@ -62,6 +67,20 @@ A professional, responsive To-Do and Activity Management web application enginee
      - ✅ **Completed**: Pastel Jade & Matcha (`#059669` / `#d1fae5`)
    - **Dual Pastel Modes**: Instant 1-click toggle between **Pastel Day** (Alabaster porcelain) and **Pastel Dusk** (Velvet slate twilight).
    - **Automatic Persistence**: Full state saved automatically to browser `localStorage` with JSON export/import options.
+
+---
+
+## 🧪 Verified End-to-End Test Suite
+
+The app includes an automated 34-assertion End-to-End test suite verifying:
+- ✅ 55 initial demo tasks generate cleanly across all categories.
+- ✅ Exactly 7 tasks classified as overdue with zero overlap into upcoming Week or Month horizons.
+- ✅ Mutually exclusive horizon math: Today (12) + Week (18) + Month (18) + Overdue (7) = 55 total.
+- ✅ Overdue tasks accurately receive the `⚠️ Overdue` / `badge-rose` badge in Grid, Table, Calendar, and Day Inspector views.
+- ✅ Filter by Scope (`overdue`) returns all 7 overdue tasks even with status filters applied.
+- ✅ Single-task reschedule moves overdue item to Today, updates KPI counters dynamically.
+- ✅ Bulk reschedule clears overdue count to 0 and reallocates items to Today.
+- ✅ Real-time statistics, progress percentages, and Chart.js datasets remain consistent across all interactions.
 
 ---
 

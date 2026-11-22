@@ -1667,6 +1667,14 @@ input:checked + .slider:before {
   background: var(--bg-surface-hover);
 }
 
+.tasks-table tr.row-overdue {
+  background: rgba(225, 29, 72, 0.03);
+}
+
+.tasks-table tr.row-overdue:hover {
+  background: rgba(225, 29, 72, 0.07);
+}
+
 /* Empty State */
 .empty-state-card {
   text-align: center;
@@ -2030,6 +2038,14 @@ input:checked + .slider:before {
   background: rgba(245, 158, 11, 0.04);
 }
 
+.calendar-cell.has-overdue {
+  background: rgba(225, 29, 72, 0.04);
+}
+
+.calendar-cell.has-overdue:hover {
+  background: rgba(225, 29, 72, 0.08);
+}
+
 .calendar-cell.is-selected {
   box-shadow: inset 0 0 0 2px var(--color-primary);
   background: rgba(99, 102, 241, 0.06);
@@ -2070,6 +2086,17 @@ input:checked + .slider:before {
   font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-subtle);
+}
+
+.cal-overdue-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--status-overdue);
+  background: var(--status-overdue-soft);
+  border-radius: 4px;
+  padding: 1px 5px;
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  white-space: nowrap;
 }
 
 .cal-task-chips {
@@ -2182,6 +2209,16 @@ input:checked + .slider:before {
 
 .inspector-task-card.is-completed {
   opacity: 0.7;
+}
+
+.inspector-task-card.is-overdue {
+  border-left: 3px solid var(--status-overdue);
+  background: var(--status-overdue-soft);
+}
+
+.text-line-through {
+  text-decoration: line-through;
+  color: var(--text-subtle);
 }
 
 .inspector-task-top {
