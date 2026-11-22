@@ -4,56 +4,72 @@
    professional executive SaaS dashboard aesthetics.
    ========================================================================== */
 
-:root {
-  /* Color System - Dark Theme (Default Executive Obsidian) */
-  --bg-app: #080c14;
-  --bg-sidebar: #0c1220;
-  --bg-surface: #111a2e;
-  --bg-surface-elevated: #16223b;
-  --bg-surface-hover: #1c2b4a;
-  --bg-input: #0c1220;
-  
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
+:root, [data-theme="light"] {
+  /* ==========================================================================
+     Executive Pastel Palette (Default)
+     Soft, calming, desaturated porcelain aesthetics with impeccable contrast
+     ========================================================================== */
+  --bg-app: #f7f9fc;
+  --bg-sidebar: #ffffff;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f3f5fa;
+  --bg-surface-hover: #ecf0f8;
+  --bg-input: #f8fafd;
+
+  --border-subtle: #e4e8f1;
+  --border-medium: #cbd5e1;
   --border-focus: #6366f1;
 
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-subtle: #64748b;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-subtle: #94a3b8;
 
-  /* Brand Accents */
+  /* Brand Accents - Soft Iris / Periwinkle */
   --color-primary: #6366f1;
   --color-primary-hover: #4f46e5;
-  --color-primary-light: rgba(99, 102, 241, 0.15);
-  --color-primary-glow: rgba(99, 102, 241, 0.35);
+  --color-primary-light: #eef2ff;
+  --color-primary-glow: rgba(99, 102, 241, 0.18);
 
-  /* Time-Horizons */
-  --horizon-today: #f59e0b;
-  --horizon-today-soft: rgba(245, 158, 11, 0.14);
-  --horizon-week: #818cf8;
-  --horizon-week-soft: rgba(129, 140, 248, 0.14);
-  --horizon-month: #14b8a6;
-  --horizon-month-soft: rgba(20, 184, 166, 0.14);
+  /* Time-Horizons - Professional Executive Pastel */
+  --horizon-today: #d97706;          /* Pastel Apricot / Honey */
+  --horizon-today-soft: #fef3c7;     /* Soft Buttercup Tint */
+  --horizon-today-border: #fde68a;
 
-  /* Status Colors */
-  --status-pending: #f59e0b;
-  --status-pending-soft: rgba(245, 158, 11, 0.14);
-  --status-completed: #10b981;
-  --status-completed-soft: rgba(16, 185, 129, 0.14);
-  --status-overdue: #ef4444;
-  --status-overdue-soft: rgba(239, 68, 68, 0.14);
+  --horizon-week: #6366f1;           /* Pastel Periwinkle / Iris */
+  --horizon-week-soft: #ede9fe;      /* Soft Lavender Tint */
+  --horizon-week-border: #ddd6fe;
+
+  --horizon-month: #0d9488;          /* Pastel Mint / Sage Seafoam */
+  --horizon-month-soft: #ccfbf1;     /* Soft Mint Tint */
+  --horizon-month-border: #99f6e4;
+
+  /* Status Colors - Soft Pastel Tones */
+  --status-pending: #d97706;
+  --status-pending-soft: #fef3c7;
+  --status-pending-border: #fde68a;
+
+  --status-completed: #059669;       /* Pastel Jade / Matcha */
+  --status-completed-soft: #d1fae5;  /* Soft Matcha Tint */
+  --status-completed-border: #a7f3d0;
+
+  --status-overdue: #e11d48;         /* Pastel Rose / Coral */
+  --status-overdue-soft: #ffe4e6;    /* Soft Petal Blush Tint */
+  --status-overdue-border: #fecdd3;
 
   /* Priorities */
-  --priority-high: #f43f5e;
-  --priority-med: #f59e0b;
-  --priority-low: #38bdf8;
+  --priority-high: #e11d48;
+  --priority-high-soft: #ffe4e6;
+  --priority-med: #d97706;
+  --priority-med-soft: #fef3c7;
+  --priority-low: #0284c7;           /* Pastel Sky */
+  --priority-low-soft: #e0f2fe;
 
   /* Elevation Shadows */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
-  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.32);
-  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.45);
-  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.18);
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 2px 6px rgba(15, 23, 42, 0.05);
+  --shadow-md: 0 6px 18px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 16px 36px rgba(15, 23, 42, 0.08);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.12);
 
   /* Radii */
   --radius-sm: 8px;
@@ -68,47 +84,64 @@
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Light Theme Variables (Clean Executive Quartz) */
-[data-theme="light"] {
-  --bg-app: #f6f8fc;
-  --bg-sidebar: #ffffff;
-  --bg-surface: #ffffff;
-  --bg-surface-elevated: #f8fafc;
-  --bg-surface-hover: #f1f5f9;
-  --bg-input: #f1f5f9;
-  
-  --border-subtle: #e2e8f0;
-  --border-medium: #cbd5e1;
-  --border-focus: #4f46e5;
+/* Dark Theme Variables (Pastel Dusk / Velvet Slate) */
+[data-theme="dark"] {
+  --bg-app: #0f141f;
+  --bg-sidebar: #131926;
+  --bg-surface: #182030;
+  --bg-surface-elevated: #1e273b;
+  --bg-surface-hover: #26314a;
+  --bg-input: #131926;
 
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-subtle: #94a3b8;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-focus: #818cf8;
 
-  --color-primary: #4f46e5;
-  --color-primary-hover: #4338ca;
-  --color-primary-light: rgba(79, 70, 229, 0.08);
-  --color-primary-glow: rgba(79, 70, 229, 0.2);
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
 
-  --horizon-today: #d97706;
-  --horizon-today-soft: #fef3c7;
-  --horizon-week: #4f46e5;
-  --horizon-week-soft: #e0e7ff;
-  --horizon-month: #0d9488;
-  --horizon-month-soft: #ccfbf1;
+  --color-primary: #818cf8;
+  --color-primary-hover: #6366f1;
+  --color-primary-light: rgba(129, 140, 248, 0.16);
+  --color-primary-glow: rgba(129, 140, 248, 0.32);
 
-  --status-pending: #b45309;
-  --status-pending-soft: #fef3c7;
-  --status-completed: #059669;
-  --status-completed-soft: #d1fae5;
-  --status-overdue: #dc2626;
-  --status-overdue-soft: #fee2e2;
+  --horizon-today: #fbbf24;
+  --horizon-today-soft: rgba(251, 191, 36, 0.15);
+  --horizon-today-border: rgba(251, 191, 36, 0.3);
 
-  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.03);
-  --shadow-sm: 0 1px 4px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.06);
-  --shadow-lg: 0 16px 32px rgba(15, 23, 42, 0.08);
-  --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.1);
+  --horizon-week: #93c5fd;
+  --horizon-week-soft: rgba(147, 197, 253, 0.15);
+  --horizon-week-border: rgba(147, 197, 253, 0.3);
+
+  --horizon-month: #5eead4;
+  --horizon-month-soft: rgba(94, 234, 212, 0.15);
+  --horizon-month-border: rgba(94, 234, 212, 0.3);
+
+  --status-pending: #fbbf24;
+  --status-pending-soft: rgba(251, 191, 36, 0.15);
+  --status-pending-border: rgba(251, 191, 36, 0.3);
+
+  --status-completed: #6ee7b7;
+  --status-completed-soft: rgba(110, 231, 183, 0.15);
+  --status-completed-border: rgba(110, 231, 183, 0.3);
+
+  --status-overdue: #fda4af;
+  --status-overdue-soft: rgba(253, 164, 175, 0.15);
+  --status-overdue-border: rgba(253, 164, 175, 0.3);
+
+  --priority-high: #fda4af;
+  --priority-high-soft: rgba(253, 164, 175, 0.15);
+  --priority-med: #fbbf24;
+  --priority-med-soft: rgba(251, 191, 36, 0.15);
+  --priority-low: #7dd3fc;
+  --priority-low-soft: rgba(125, 211, 252, 0.15);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 6px 18px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-glow: 0 0 20px rgba(129, 140, 248, 0.2);
 }
 
 /* ==========================================================================
@@ -131,8 +164,9 @@ body {
   overflow-x: hidden;
   transition: background-color var(--transition-normal), color var(--transition-normal);
   background-image: 
-    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.04) 0%, transparent 40%),
-    radial-gradient(circle at 90% 70%, rgba(20, 184, 166, 0.03) 0%, transparent 45%);
+    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 90% 70%, rgba(20, 184, 166, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(244, 63, 94, 0.02) 0%, transparent 45%);
 }
 
 button, input, select, textarea {
@@ -145,6 +179,9 @@ button, input, select, textarea {
 .text-indigo { color: var(--horizon-week) !important; }
 .text-teal { color: var(--horizon-month) !important; }
 .text-rose { color: var(--status-overdue) !important; }
+.text-emerald { color: var(--status-completed) !important; }
+.text-sky { color: var(--priority-low) !important; }
+.text-purple { color: #8b5cf6 !important; }
 
 /* ==========================================================================
    App Layout
@@ -306,10 +343,10 @@ button, input, select, textarea {
   color: #ffffff;
 }
 
-.badge-amber { color: var(--horizon-today); background: var(--horizon-today-soft); }
-.badge-indigo { color: var(--horizon-week); background: var(--horizon-week-soft); }
-.badge-teal { color: var(--horizon-month); background: var(--horizon-month-soft); }
-.badge-rose { color: var(--status-overdue); background: var(--status-overdue-soft); }
+.badge-amber { color: var(--horizon-today); background: var(--horizon-today-soft); border: 1px solid var(--horizon-today-border); }
+.badge-indigo { color: var(--horizon-week); background: var(--horizon-week-soft); border: 1px solid var(--horizon-week-border); }
+.badge-teal { color: var(--horizon-month); background: var(--horizon-month-soft); border: 1px solid var(--horizon-month-border); }
+.badge-rose { color: var(--status-overdue); background: var(--status-overdue-soft); border: 1px solid var(--status-overdue-border); }
 
 .category-filters {
   display: flex;
@@ -522,15 +559,15 @@ input:checked + .slider:before {
   justify-content: space-between;
   gap: 20px;
   border-bottom: 1px solid var(--border-subtle);
-  background: rgba(8, 12, 20, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   position: sticky;
   top: 0;
   z-index: 50;
   backdrop-filter: blur(12px);
 }
 
-[data-theme="light"] .top-navbar {
-  background: rgba(246, 248, 252, 0.9);
+[data-theme="dark"] .top-navbar {
+  background: rgba(19, 25, 38, 0.92);
 }
 
 .top-nav-left {
@@ -778,8 +815,8 @@ input:checked + .slider:before {
 
 /* Hero Horizon Card */
 .dashboard-hero-card {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.08), rgba(20, 184, 166, 0.06));
-  border: 1px solid var(--border-medium);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(168, 85, 247, 0.06), rgba(20, 184, 166, 0.06));
+  border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: var(--radius-xl);
   padding: 28px 32px;
   display: flex;
@@ -791,6 +828,11 @@ input:checked + .slider:before {
   overflow: hidden;
 }
 
+[data-theme="dark"] .dashboard-hero-card {
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.12), rgba(192, 132, 252, 0.08), rgba(94, 234, 212, 0.06));
+  border-color: rgba(129, 140, 248, 0.22);
+}
+
 .dashboard-hero-card::before {
   content: '';
   position: absolute;
@@ -798,7 +840,7 @@ input:checked + .slider:before {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
 }
 
 .hero-left {
@@ -861,10 +903,10 @@ input:checked + .slider:before {
   box-shadow: var(--shadow-xs);
 }
 
-.today-pill { border-color: rgba(245, 158, 11, 0.35); color: var(--horizon-today); }
-.week-pill { border-color: rgba(129, 140, 248, 0.35); color: var(--horizon-week); }
-.month-pill { border-color: rgba(20, 184, 166, 0.35); color: var(--horizon-month); }
-.overdue-pill { border-color: rgba(239, 68, 68, 0.35); color: var(--status-overdue); }
+.today-pill { border: 1px solid var(--horizon-today-border); color: var(--horizon-today); background: var(--horizon-today-soft); }
+.week-pill { border: 1px solid var(--horizon-week-border); color: var(--horizon-week); background: var(--horizon-week-soft); }
+.month-pill { border: 1px solid var(--horizon-month-border); color: var(--horizon-month); background: var(--horizon-month-soft); }
+.overdue-pill { border: 1px solid var(--status-overdue-border); color: var(--status-overdue); background: var(--status-overdue-soft); }
 
 /* Radial Completion Ring */
 .hero-progress-ring {
@@ -1461,9 +1503,9 @@ input:checked + .slider:before {
   border: 1px solid var(--border-subtle);
 }
 
-.badge-scope.scope-today { background: var(--horizon-today-soft); color: var(--horizon-today); border-color: rgba(245, 158, 11, 0.3); }
-.badge-scope.scope-week { background: var(--horizon-week-soft); color: var(--horizon-week); border-color: rgba(129, 140, 248, 0.3); }
-.badge-scope.scope-month { background: var(--horizon-month-soft); color: var(--horizon-month); border-color: rgba(20, 184, 166, 0.3); }
+.badge-scope.scope-today { background: var(--horizon-today-soft); color: var(--horizon-today); border: 1px solid var(--horizon-today-border); }
+.badge-scope.scope-week { background: var(--horizon-week-soft); color: var(--horizon-week); border: 1px solid var(--horizon-week-border); }
+.badge-scope.scope-month { background: var(--horizon-month-soft); color: var(--horizon-month); border: 1px solid var(--horizon-month-border); }
 
 .badge-status {
   padding: 3px 9px;
@@ -1472,16 +1514,19 @@ input:checked + .slider:before {
 .status-badge-pending {
   background: var(--status-pending-soft);
   color: var(--status-pending);
+  border: 1px solid var(--status-pending-border);
 }
 
 .status-badge-completed {
   background: var(--status-completed-soft);
   color: var(--status-completed);
+  border: 1px solid var(--status-completed-border);
 }
 
 .status-badge-overdue {
   background: var(--status-overdue-soft);
   color: var(--status-overdue);
+  border: 1px solid var(--status-overdue-border);
   animation: pulseOverdue 2s infinite ease-in-out;
 }
 
@@ -1492,17 +1537,20 @@ input:checked + .slider:before {
 
 .badge-priority-high {
   color: var(--priority-high);
-  background: rgba(244, 63, 94, 0.12);
+  background: var(--priority-high-soft);
+  border: 1px solid var(--status-overdue-border);
 }
 
 .badge-priority-medium {
   color: var(--priority-med);
-  background: rgba(245, 158, 11, 0.12);
+  background: var(--priority-med-soft);
+  border: 1px solid var(--status-pending-border);
 }
 
 .badge-priority-low {
   color: var(--priority-low);
-  background: rgba(56, 189, 248, 0.12);
+  background: var(--priority-low-soft);
+  border: 1px solid rgba(2, 132, 199, 0.2);
 }
 
 .task-card-footer {
@@ -2202,10 +2250,12 @@ input:checked + .slider:before {
   flex-shrink: 0;
 }
 
-.bg-indigo { background: linear-gradient(135deg, #6366f1, #4f46e5); }
-.bg-teal { background: linear-gradient(135deg, #14b8a6, #0d9488); }
-.bg-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.bg-gray { background: #64748b; }
+.bg-indigo { background: linear-gradient(135deg, #818cf8, #6366f1); }
+.bg-teal { background: linear-gradient(135deg, #2dd4bf, #0d9488); }
+.bg-amber { background: linear-gradient(135deg, #fbbf24, #d97706); }
+.bg-rose { background: linear-gradient(135deg, #f472b6, #e11d48); }
+.bg-purple { background: linear-gradient(135deg, #c084fc, #7c3aed); }
+.bg-gray { background: linear-gradient(135deg, #94a3b8, #64748b); }
 
 .user-meta-preview {
   display: flex;

@@ -52,9 +52,16 @@ A professional, responsive To-Do and Activity Management web application enginee
    - **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View**.
    - **Print Report**: Instant formatted agenda printing via `@media print`.
 
-4. **Modern Design & Local Persistence**:
-   - Polished Obsidian Dark Theme & Quartz Light Theme toggle with smooth transitions.
-   - Automatic `localStorage` persistence and JSON Export / Import for backup.
+4. **Executive Pastel Design System & Local Persistence**:
+   - **Professional Pastel Palette**: Engineered for high visual comfort and executive clarity with calming porcelain surfaces (`#f7f9fc`), soft ambient gradients, and crisp typography.
+   - **Harmonious Pastel Horizons & Status Badges**:
+     - ☀️ **Today**: Pastel Apricot & Buttercup (`#d97706` / `#fef3c7`)
+     - 📅 **This Week**: Pastel Periwinkle & Lavender (`#6366f1` / `#ede9fe`)
+     - 🗓️ **This Month**: Pastel Mint & Sage Seafoam (`#0d9488` / `#ccfbf1`)
+     - ⚠️ **Overdue**: Pastel Coral & Petal Rose (`#e11d48` / `#ffe4e6`)
+     - ✅ **Completed**: Pastel Jade & Matcha (`#059669` / `#d1fae5`)
+   - **Dual Pastel Modes**: Instant 1-click toggle between **Pastel Day** (Alabaster porcelain) and **Pastel Dusk** (Velvet slate twilight).
+   - **Automatic Persistence**: Full state saved automatically to browser `localStorage` with JSON export/import options.
 
 ---
 

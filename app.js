@@ -1196,13 +1196,17 @@ function renderCharts(stats) {
       state.charts.status.destroy();
     }
 
+    const statusPastelColors = isDark 
+      ? ['#6ee7b7', '#fcd34d', '#fda4af'] 
+      : ['#34d399', '#fbbf24', '#f87171'];
+
     state.charts.status = new Chart(statusCtx, {
       type: 'doughnut',
       data: {
         labels: ['Completed', 'Still Not Done', 'Overdue'],
         datasets: [{
           data: [stats.completed, stats.stillNotDone, stats.overdue],
-          backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+          backgroundColor: statusPastelColors,
           borderWidth: 0,
           hoverOffset: 6
         }]
@@ -1215,9 +1219,9 @@ function renderCharts(stats) {
             display: false
           },
           tooltip: {
-            backgroundColor: isDark ? '#16223b' : '#ffffff',
-            titleColor: isDark ? '#f8fafc' : '#0f172a',
-            bodyColor: isDark ? '#94a3b8' : '#475569',
+            backgroundColor: isDark ? '#1a2236' : '#ffffff',
+            titleColor: isDark ? '#f8fafc' : '#1e293b',
+            bodyColor: isDark ? '#94a3b8' : '#64748b',
             borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
             borderWidth: 1,
             padding: 10,
@@ -1237,10 +1241,13 @@ function renderCharts(stats) {
 
     const legendEl = document.getElementById('statusChartLegend');
     if (legendEl) {
+      const dotColors = isDark 
+        ? { done: '#6ee7b7', pending: '#fcd34d', overdue: '#fda4af' }
+        : { done: '#34d399', pending: '#fbbf24', overdue: '#f87171' };
       legendEl.innerHTML = `
-        <span class="legend-item"><span class="legend-dot" style="background:#10b981;"></span> Done (${stats.completed})</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#f59e0b;"></span> Pending (${stats.stillNotDone})</span>
-        <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Overdue (${stats.overdue})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.done};"></span> Done (${stats.completed})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.pending};"></span> Pending (${stats.stillNotDone})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.overdue};"></span> Overdue (${stats.overdue})</span>
       `;
     }
   }
@@ -1252,6 +1259,11 @@ function renderCharts(stats) {
       state.charts.horizon.destroy();
     }
 
+    const horizonPendingPastel = isDark
+      ? ['#fcd34d', '#93c5fd', '#5eead4']
+      : ['#fbbf24', '#818cf8', '#2dd4bf'];
+    const horizonDonePastel = isDark ? '#6ee7b7' : '#34d399';
+
     state.charts.horizon = new Chart(horizonCtx, {
       type: 'bar',
       data: {
@@ -1260,13 +1272,13 @@ function renderCharts(stats) {
           {
             label: 'Still Not Done',
             data: [stats.today.pending, stats.week.pending, stats.month.pending],
-            backgroundColor: ['#f59e0b', '#818cf8', '#14b8a6'],
+            backgroundColor: horizonPendingPastel,
             borderRadius: 6
           },
           {
             label: 'Completed',
             data: [stats.today.done, stats.week.done, stats.month.done],
-            backgroundColor: '#10b981',
+            backgroundColor: horizonDonePastel,
             borderRadius: 6
           }
         ]
@@ -1300,9 +1312,9 @@ function renderCharts(stats) {
             }
           },
           tooltip: {
-            backgroundColor: isDark ? '#16223b' : '#ffffff',
-            titleColor: isDark ? '#f8fafc' : '#0f172a',
-            bodyColor: isDark ? '#94a3b8' : '#475569',
+            backgroundColor: isDark ? '#1a2236' : '#ffffff',
+            titleColor: isDark ? '#f8fafc' : '#1e293b',
+            bodyColor: isDark ? '#94a3b8' : '#64748b',
             borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
             borderWidth: 1,
             padding: 10
@@ -1327,7 +1339,9 @@ function renderCharts(stats) {
 
     const labels = Object.keys(catMap);
     const dataValues = Object.values(catMap);
-    const catColors = ['#6366f1', '#ec4899', '#14b8a6', '#f59e0b', '#3b82f6', '#8b5cf6', '#10b981'];
+    const catColors = isDark
+      ? ['#93c5fd', '#f472b6', '#5eead4', '#fcd34d', '#7dd3fc', '#c084fc', '#6ee7b7']
+      : ['#818cf8', '#f472b6', '#2dd4bf', '#fbbf24', '#38bdf8', '#c084fc', '#34d399'];
 
     state.charts.category = new Chart(catCtx, {
       type: 'doughnut',
@@ -1352,9 +1366,9 @@ function renderCharts(stats) {
             }
           },
           tooltip: {
-            backgroundColor: isDark ? '#16223b' : '#ffffff',
-            titleColor: isDark ? '#f8fafc' : '#0f172a',
-            bodyColor: isDark ? '#94a3b8' : '#475569',
+            backgroundColor: isDark ? '#1a2236' : '#ffffff',
+            titleColor: isDark ? '#f8fafc' : '#1e293b',
+            bodyColor: isDark ? '#94a3b8' : '#64748b',
             borderColor: isDark ? 'rgba(255,255,255,0.1)' : '#e2e8f0',
             borderWidth: 1,
             padding: 10
@@ -2417,7 +2431,7 @@ function triggerCelebration() {
 }
 
 function initTheme() {
-  const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
   document.body.setAttribute('data-theme', savedTheme);
   const toggleCheckbox = document.getElementById('themeToggleCheckbox');
   const themeLabelText = document.getElementById('themeLabelText');
@@ -2427,8 +2441,8 @@ function initTheme() {
   }
   if (themeLabelText) {
     themeLabelText.innerHTML = savedTheme === 'dark' 
-      ? '<i class="fa-solid fa-moon"></i> Dark Theme' 
-      : '<i class="fa-solid fa-sun"></i> Light Theme';
+      ? '<i class="fa-solid fa-moon text-indigo"></i> Pastel Dusk' 
+      : '<i class="fa-solid fa-wand-magic-sparkles text-amber"></i> Pastel Day';
   }
 }
 
@@ -2440,8 +2454,8 @@ function toggleTheme(isDark) {
   const themeLabelText = document.getElementById('themeLabelText');
   if (themeLabelText) {
     themeLabelText.innerHTML = isDark 
-      ? '<i class="fa-solid fa-moon"></i> Dark Theme' 
-      : '<i class="fa-solid fa-sun"></i> Light Theme';
+      ? '<i class="fa-solid fa-moon text-indigo"></i> Pastel Dusk' 
+      : '<i class="fa-solid fa-wand-magic-sparkles text-amber"></i> Pastel Day';
   }
 
   const stats = calculateStats();
