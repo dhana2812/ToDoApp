@@ -19,7 +19,13 @@ A professional, responsive To-Do and Activity Management web application enginee
      - **7 Overdue activities** (highlighted in crimson with instant 1-click "Reschedule to Today" action)
    - One-click **"55 Demo Tasks"** button in the sidebar footer to instantly reload the dataset anytime during presentations.
 
-2. **Executive Visual Analytics Dashboard**:
+2. **Interactive Calendar View**:
+   - **Monthly Grid**: Full 35/42-cell interactive calendar view plotting all activities on their respective due dates.
+   - **Task Pills & Indicators**: Live task chips with priority dots, category badges, strikethrough on completion, and overdue alerts.
+   - **Day Inspector Side Panel**: Clicking any date opens the side inspector detailing all scheduled activities for that day, complete with status toggles, edits, and a "+ Add on Date" quick action.
+   - **Month Navigation**: Effortlessly jump between months with `<` and `>`, or click `Today` to return to the active date.
+
+3. **Executive Visual Analytics Dashboard**:
    - **Progress Radial Ring**: Circular SVG completion meter calculating overall progress velocity in real time.
    - **4 Time-Horizon Metric Cards**: Dedicated KPI cards for Today, This Week, This Month, and Overdue with animated progress bars and exact date range badges.
    - **Interactive Chart.js Visualizations**:

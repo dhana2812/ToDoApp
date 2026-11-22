@@ -1627,6 +1627,14 @@ function escapeHtml(str) {
 // ==========================================================================
 // 10. Task CRUD & Reschedule Operations
 // ==========================================================================
+function refreshAllViews() {
+  updateDashboardUI();
+  renderTasksList();
+  if (state.currentView === 'calendar') {
+    renderCalendar();
+  }
+}
+
 function toggleTaskStatus(taskId) {
   const task = state.tasks.find(t => t.id === taskId);
   if (!task) return;
@@ -1642,8 +1650,7 @@ function toggleTaskStatus(taskId) {
   }
 
   saveTasks();
-  updateDashboardUI();
-  renderTasksList();
+  refreshAllViews();
 }
 
 function rescheduleTaskToToday(taskId) {
@@ -1653,8 +1660,7 @@ function rescheduleTaskToToday(taskId) {
   task.dueDate = getTodayDateString();
   task.status = 'pending';
   saveTasks();
-  updateDashboardUI();
-  renderTasksList();
+  refreshAllViews();
   showToast(`"${task.title}" rescheduled to Today! ☀️`, 'success');
 }
 
@@ -1669,8 +1675,7 @@ function rescheduleAllOverdueToToday() {
   });
 
   saveTasks();
-  updateDashboardUI();
-  renderTasksList();
+  refreshAllViews();
   showToast(`${overdueTasks.length} overdue activities rescheduled to Today! ☀️`, 'success');
 }
 
@@ -1684,13 +1689,12 @@ function clearCompletedTasks() {
   if (confirm(`Clear all ${completedCount} completed activities from your list?`)) {
     state.tasks = state.tasks.filter(t => t.status !== 'completed');
     saveTasks();
-    updateDashboardUI();
-    renderTasksList();
+    refreshAllViews();
     showToast(`Cleared ${completedCount} completed activities.`, 'info');
   }
 }
 
-function openAddModal(defaultScope = null) {
+function openAddModal(defaultScope = null, specificDate = null) {
   const modal = document.getElementById('taskModal');
   const form = document.getElementById('taskForm');
   const modalTitle = document.getElementById('modalTitle');
@@ -1702,13 +1706,15 @@ function openAddModal(defaultScope = null) {
   modalTitle.textContent = 'New Activity';
   modalSubtitle.textContent = 'Create an activity to track today, this week, or this month';
 
-  let defaultDate = getTodayDateString();
-  if (defaultScope === 'tomorrow') {
-    defaultDate = getTodayDateString(1);
-  } else if (defaultScope === 'week') {
-    defaultDate = getTodayDateString(3);
-  } else if (defaultScope === 'month') {
-    defaultDate = getTodayDateString(14);
+  let defaultDate = specificDate || getTodayDateString();
+  if (!specificDate) {
+    if (defaultScope === 'tomorrow') {
+      defaultDate = getTodayDateString(1);
+    } else if (defaultScope === 'week') {
+      defaultDate = getTodayDateString(3);
+    } else if (defaultScope === 'month') {
+      defaultDate = getTodayDateString(14);
+    }
   }
 
   document.getElementById('taskDueDateInput').value = defaultDate;
@@ -1809,8 +1815,7 @@ function handleSaveTaskForm(e) {
 
   saveTasks();
   closeModal();
-  updateDashboardUI();
-  renderTasksList();
+  refreshAllViews();
 }
 
 function deleteTask(taskId) {
@@ -1821,8 +1826,7 @@ function deleteTask(taskId) {
     state.tasks = state.tasks.filter(t => t.id !== taskId);
     saveTasks();
     showToast('Activity removed.', 'info');
-    updateDashboardUI();
-    renderTasksList();
+    refreshAllViews();
   }
 }
 
@@ -1851,6 +1855,7 @@ function switchView(viewName) {
   state.currentView = viewName;
   const dashboardSec = document.getElementById('dashboardView');
   const tasksSec = document.getElementById('tasksView');
+  const calendarSec = document.getElementById('calendarView');
   const pageTitle = document.getElementById('pageTitle');
 
   document.querySelectorAll('.sidebar-nav .nav-btn').forEach(btn => {
@@ -1860,11 +1865,19 @@ function switchView(viewName) {
   if (viewName === 'dashboard') {
     dashboardSec.style.display = 'flex';
     tasksSec.style.display = 'none';
+    if (calendarSec) calendarSec.style.display = 'none';
     pageTitle.textContent = 'Executive Dashboard';
     updateDashboardUI();
+  } else if (viewName === 'calendar') {
+    dashboardSec.style.display = 'none';
+    tasksSec.style.display = 'none';
+    if (calendarSec) calendarSec.style.display = 'flex';
+    pageTitle.textContent = 'Interactive Calendar';
+    renderCalendar();
   } else {
     dashboardSec.style.display = 'none';
     tasksSec.style.display = 'flex';
+    if (calendarSec) calendarSec.style.display = 'none';
     pageTitle.textContent = 'Activities Management';
     renderTasksList();
   }
@@ -1879,6 +1892,167 @@ function filterByScope(scope) {
   });
 
   renderTasksList();
+}
+
+// ==========================================================================
+// 12. Interactive Calendar Module
+// ==========================================================================
+state.calendarViewDate = new Date();
+state.selectedCalendarDate = formatDateToYYYYMMDD(new Date());
+
+function changeCalendarMonth(delta) {
+  state.calendarViewDate.setMonth(state.calendarViewDate.getMonth() + delta);
+  renderCalendar();
+}
+
+function goToTodayCalendar() {
+  state.calendarViewDate = new Date();
+  state.selectedCalendarDate = formatDateToYYYYMMDD(new Date());
+  renderCalendar();
+}
+
+function selectCalendarDate(dateStr) {
+  state.selectedCalendarDate = dateStr;
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const grid = document.getElementById('calendarDaysGrid');
+  const monthTitle = document.getElementById('calMonthTitle');
+  if (!grid || !monthTitle) return;
+
+  const currentYear = state.calendarViewDate.getFullYear();
+  const currentMonth = state.calendarViewDate.getMonth();
+
+  // Set Month Title
+  const monthName = state.calendarViewDate.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  monthTitle.textContent = monthName;
+
+  // Calendar dates math
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay(); // 0 is Sunday
+  const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
+
+  const totalCells = (firstDayIndex + daysInCurrentMonth) > 35 ? 42 : 35;
+  const cells = [];
+  const todayStr = formatDateToYYYYMMDD(new Date());
+
+  // 1. Previous month trailing days
+  for (let i = firstDayIndex - 1; i >= 0; i--) {
+    const dayNum = daysInPrevMonth - i;
+    const prevDate = new Date(currentYear, currentMonth - 1, dayNum);
+    const dateStr = formatDateToYYYYMMDD(prevDate);
+    cells.push({ dayNum, dateStr, isOtherMonth: true });
+  }
+
+  // 2. Current month days
+  for (let d = 1; d <= daysInCurrentMonth; d++) {
+    const curDate = new Date(currentYear, currentMonth, d);
+    const dateStr = formatDateToYYYYMMDD(curDate);
+    cells.push({ dayNum: d, dateStr, isOtherMonth: false });
+  }
+
+  // 3. Next month leading days
+  const remainingCells = totalCells - cells.length;
+  for (let d = 1; d <= remainingCells; d++) {
+    const nextDate = new Date(currentYear, currentMonth + 1, d);
+    const dateStr = formatDateToYYYYMMDD(nextDate);
+    cells.push({ dayNum: d, dateStr, isOtherMonth: true });
+  }
+
+  // Render HTML for grid
+  grid.innerHTML = cells.map(cell => {
+    const isToday = cell.dateStr === todayStr;
+    const isSelected = cell.dateStr === state.selectedCalendarDate;
+    const dayTasks = state.tasks.filter(t => t.dueDate === cell.dateStr);
+
+    const visibleTasks = dayTasks.slice(0, 3);
+    const moreCount = dayTasks.length - 3;
+
+    return `
+      <div class="calendar-cell ${isToday ? 'is-today' : ''} ${isSelected ? 'is-selected' : ''} ${cell.isOtherMonth ? 'other-month' : ''}" data-cal-date="${cell.dateStr}">
+        <div class="cal-cell-header">
+          <span class="cal-cell-day-num">${cell.dayNum}</span>
+          ${dayTasks.length > 0 ? `<span class="cal-cell-count-tag">${dayTasks.length} task${dayTasks.length > 1 ? 's' : ''}</span>` : ''}
+        </div>
+        <div class="cal-task-chips">
+          ${visibleTasks.map(t => {
+            const isDone = t.status === 'completed';
+            const isOverdue = isTaskOverdue(t);
+            let dotColor = '#38bdf8';
+            if (t.priority === 'high') dotColor = '#f43f5e';
+            if (t.priority === 'medium') dotColor = '#f59e0b';
+
+            return `
+              <div class="cal-chip ${isDone ? 'is-done' : ''} ${isOverdue ? 'is-overdue' : ''}" data-task-id="${t.id}" title="${escapeHtml(t.title)} (${capitalize(t.priority)} Priority)">
+                <span style="width:5px; height:5px; border-radius:50%; background:${dotColor}; flex-shrink:0; display:inline-block;"></span>
+                <span>${escapeHtml(t.title)}</span>
+              </div>
+            `;
+          }).join('')}
+          ${moreCount > 0 ? `<span class="cal-more-chip">+${moreCount} more</span>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Update Day Inspector
+  renderDayInspector();
+}
+
+function renderDayInspector() {
+  const titleEl = document.getElementById('inspectorDateTitle');
+  const countEl = document.getElementById('inspectorTaskCount');
+  const listEl = document.getElementById('inspectorTasksList');
+  if (!titleEl || !countEl || !listEl) return;
+
+  const selDate = parseDate(state.selectedCalendarDate);
+  const options = { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' };
+  titleEl.textContent = selDate.toLocaleDateString(undefined, options);
+
+  const dayTasks = state.tasks.filter(t => t.dueDate === state.selectedCalendarDate);
+  countEl.textContent = `${dayTasks.length} ${dayTasks.length === 1 ? 'Activity' : 'Activities'}`;
+
+  if (dayTasks.length === 0) {
+    listEl.innerHTML = `
+      <div style="text-align:center; padding:36px 12px; color:var(--text-muted); background:var(--bg-surface-elevated); border-radius:var(--radius-md);">
+        <i class="fa-regular fa-calendar-plus" style="font-size:1.8rem; margin-bottom:8px; display:inline-block; color:var(--text-subtle);"></i>
+        <p style="font-size:0.84rem;">No activities scheduled on this date.</p>
+        <button class="btn-subtle" id="emptyDayAddBtn" style="margin-top:10px; font-size:0.78rem;">
+          <i class="fa-solid fa-plus"></i> Add Activity
+        </button>
+      </div>
+    `;
+    document.getElementById('emptyDayAddBtn')?.addEventListener('click', () => {
+      openAddModal(null, state.selectedCalendarDate);
+    });
+    return;
+  }
+
+  listEl.innerHTML = dayTasks.map(task => {
+    const isCompleted = task.status === 'completed';
+    const isOverdue = isTaskOverdue(task);
+
+    return `
+      <div class="inspector-task-card ${isCompleted ? 'is-completed' : ''} ${isOverdue ? 'is-overdue' : ''}">
+        <div class="inspector-task-top">
+          <input type="checkbox" class="task-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''} title="Toggle completed">
+          <span class="inspector-task-title">${escapeHtml(task.title)}</span>
+          <button class="action-icon-btn btn-edit" data-edit-id="${task.id}" title="Edit activity">
+            <i class="fa-solid fa-pen"></i>
+          </button>
+        </div>
+        ${task.description ? `<p style="font-size:0.78rem; color:var(--text-muted); line-height:1.4; padding-left:26px;">${escapeHtml(task.description)}</p>` : ''}
+        <div class="inspector-task-meta" style="padding-left:26px;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <span class="badge ${getPriorityBadgeClass(task.priority)}">${capitalize(task.priority)}</span>
+            <span class="badge badge-scope">${escapeHtml(task.category || 'General')}</span>
+          </div>
+          <span>${task.dueTime ? formatTime(task.dueTime) : 'All Day'}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 // ==========================================================================
@@ -2271,8 +2445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('loadDemoDataBtn')?.addEventListener('click', () => {
     state.tasks = generateInitialSampleTasks();
     saveTasks();
-    updateDashboardUI();
-    renderTasksList();
+    refreshAllViews();
     showToast('Loaded 55 demo activities across all horizons! 🎉', 'success');
   });
   document.getElementById('exportDataBtn')?.addEventListener('click', exportTasksToJSON);
@@ -2282,6 +2455,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   document.getElementById('resetDataBtn')?.addEventListener('click', resetToDefaultTasks);
+
+  // Calendar Controls & Grid Delegations
+  document.getElementById('calPrevMonthBtn')?.addEventListener('click', () => changeCalendarMonth(-1));
+  document.getElementById('calNextMonthBtn')?.addEventListener('click', () => changeCalendarMonth(1));
+  document.getElementById('calTodayBtn')?.addEventListener('click', goToTodayCalendar);
+  document.getElementById('calQuickAddBtn')?.addEventListener('click', () => openAddModal(null, state.selectedCalendarDate));
+  document.getElementById('inspectorAddBtn')?.addEventListener('click', () => openAddModal(null, state.selectedCalendarDate));
+
+  document.getElementById('calendarDaysGrid')?.addEventListener('click', (e) => {
+    const cell = e.target.closest('[data-cal-date]');
+    if (cell) {
+      const dateStr = cell.getAttribute('data-cal-date');
+      if (dateStr) selectCalendarDate(dateStr);
+    }
+  });
 
   // Mobile Sidebar Drawer
   const openSidebarBtn = document.getElementById('openSidebarBtn');
