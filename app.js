@@ -9,10 +9,40 @@
 // ==========================================================================
 const STORAGE_KEY = 'taskhorizon_activities_demo_55_v1';
 const THEME_KEY = 'taskhorizon_theme';
+const USER_SESSION_KEY = 'taskhorizon_user_session';
+
+const DEMO_USERS = {
+  alex: {
+    id: 'user-alex',
+    name: 'Alex Morgan',
+    initials: 'AM',
+    role: 'Executive Director',
+    email: 'alex.morgan@company.com',
+    avatarClass: 'bg-indigo'
+  },
+  sarah: {
+    id: 'user-sarah',
+    name: 'Sarah Chen',
+    initials: 'SC',
+    role: 'Senior Product Manager',
+    email: 'sarah.chen@product.io',
+    avatarClass: 'bg-teal'
+  },
+  david: {
+    id: 'user-david',
+    name: 'David Kumar',
+    initials: 'DK',
+    role: 'Principal Architect',
+    email: 'david.k@techlead.dev',
+    avatarClass: 'bg-amber'
+  }
+};
 
 const state = {
   tasks: [],
-  currentView: 'dashboard', // 'dashboard' | 'all-tasks'
+  currentUser: null,
+  authMode: 'signin',      // 'signin' | 'signup'
+  currentView: 'dashboard', // 'dashboard' | 'all-tasks' | 'calendar'
   filters: {
     scope: 'all',          // 'all' | 'today' | 'week' | 'month' | 'overdue'
     status: 'all',         // 'all' | 'pending' | 'completed' | 'overdue'
@@ -999,7 +1029,8 @@ function updateDashboardUI() {
     let timeGreeting = 'Good evening';
     if (currentHour < 12) timeGreeting = 'Good morning';
     else if (currentHour < 17) timeGreeting = 'Good afternoon';
-    heroGreetingText.textContent = `${timeGreeting}! Here's your executive activity outlook.`;
+    const userFirstName = state.currentUser ? state.currentUser.name.split(' ')[0] : 'there';
+    heroGreetingText.textContent = `${timeGreeting}, ${userFirstName}! Here's your executive activity outlook.`;
   }
 
   if (heroSummaryText) {
@@ -2101,7 +2132,253 @@ function resetToDefaultTasks() {
 }
 
 // ==========================================================================
-// 13. UI Enhancements: Toast, Confetti, Theme
+// 13. User Authentication & Profile Management
+// ==========================================================================
+function getInitials(name) {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+function initUserSession() {
+  try {
+    const stored = localStorage.getItem(USER_SESSION_KEY);
+    if (stored) {
+      state.currentUser = JSON.parse(stored);
+    } else {
+      state.currentUser = DEMO_USERS.alex;
+      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(state.currentUser));
+    }
+  } catch (err) {
+    console.error('Failed to parse user session:', err);
+    state.currentUser = DEMO_USERS.alex;
+  }
+  updateUserUI();
+}
+
+function setUserSession(user, persist = true) {
+  state.currentUser = user;
+  if (persist && user) {
+    try {
+      localStorage.setItem(USER_SESSION_KEY, JSON.stringify(user));
+    } catch (e) {
+      console.warn('Could not persist session', e);
+    }
+  } else if (!user) {
+    localStorage.removeItem(USER_SESSION_KEY);
+  }
+  updateUserUI();
+  updateDashboardUI();
+}
+
+function updateUserUI() {
+  const user = state.currentUser || {
+    name: 'Guest User',
+    role: 'Guest Access',
+    email: 'guest@horizon.app',
+    initials: 'GU',
+    avatarClass: 'bg-gray'
+  };
+
+  const avatarClass = user.avatarClass || 'bg-indigo';
+  const initials = user.initials || getInitials(user.name);
+
+  // 1. Top Navbar
+  const navAvatar = document.getElementById('navAvatar');
+  const navUserName = document.getElementById('navUserName');
+  const navUserRole = document.getElementById('navUserRole');
+  if (navAvatar) {
+    navAvatar.textContent = initials;
+    navAvatar.className = `user-avatar ${avatarClass}`;
+  }
+  if (navUserName) navUserName.textContent = user.name;
+  if (navUserRole) navUserRole.textContent = user.role;
+
+  // 2. Sidebar Footer Card
+  const sidebarAvatar = document.getElementById('sidebarAvatar');
+  const sidebarUserName = document.getElementById('sidebarUserName');
+  const sidebarUserRole = document.getElementById('sidebarUserRole');
+  if (sidebarAvatar) {
+    sidebarAvatar.textContent = initials;
+    sidebarAvatar.className = `user-avatar-sm ${avatarClass}`;
+  }
+  if (sidebarUserName) sidebarUserName.textContent = user.name;
+  if (sidebarUserRole) sidebarUserRole.textContent = user.role;
+
+  // 3. Dropdown Menu Header
+  const dropdownAvatar = document.getElementById('dropdownAvatar');
+  const dropdownUserName = document.getElementById('dropdownUserName');
+  const dropdownUserEmail = document.getElementById('dropdownUserEmail');
+  const dropdownUserRole = document.getElementById('dropdownUserRole');
+  if (dropdownAvatar) {
+    dropdownAvatar.textContent = initials;
+    dropdownAvatar.className = `user-avatar-lg ${avatarClass}`;
+  }
+  if (dropdownUserName) dropdownUserName.textContent = user.name;
+  if (dropdownUserEmail) dropdownUserEmail.textContent = user.email || `${user.name.toLowerCase().replace(/\s+/g, '.')}@horizon.app`;
+  if (dropdownUserRole) dropdownUserRole.textContent = user.role;
+}
+
+function toggleUserDropdown() {
+  const dropdown = document.getElementById('userDropdown');
+  if (!dropdown) return;
+  const isClosed = dropdown.style.display === 'none' || !dropdown.style.display;
+  dropdown.style.display = isClosed ? 'flex' : 'none';
+}
+
+function closeUserDropdown() {
+  const dropdown = document.getElementById('userDropdown');
+  if (dropdown) dropdown.style.display = 'none';
+}
+
+function openAuthModal(mode = 'signin') {
+  state.authMode = mode;
+  closeUserDropdown();
+
+  const modal = document.getElementById('authModal');
+  const titleEl = document.getElementById('authModalTitle');
+  const subtitleEl = document.getElementById('authModalSubtitle');
+  const tabSignIn = document.getElementById('tabSignInBtn');
+  const tabSignUp = document.getElementById('tabSignUpBtn');
+  const nameGroup = document.getElementById('authNameGroup');
+  const roleGroup = document.getElementById('authRoleGroup');
+  const submitText = document.getElementById('submitAuthBtnText');
+
+  if (mode === 'signup') {
+    tabSignIn?.classList.remove('active');
+    tabSignUp?.classList.add('active');
+    if (titleEl) titleEl.textContent = 'Create New Account';
+    if (subtitleEl) subtitleEl.textContent = 'Set up your executive profile and personalize your workspace';
+    if (nameGroup) nameGroup.style.display = 'block';
+    if (roleGroup) roleGroup.style.display = 'block';
+    if (submitText) submitText.textContent = 'Create Account';
+    setTimeout(() => document.getElementById('authNameInput')?.focus(), 100);
+  } else {
+    tabSignIn?.classList.add('active');
+    tabSignUp?.classList.remove('active');
+    if (titleEl) titleEl.textContent = 'Account Sign In';
+    if (subtitleEl) subtitleEl.textContent = 'Sign in to sync activities and personalize your horizon workspace';
+    if (nameGroup) nameGroup.style.display = 'none';
+    if (roleGroup) roleGroup.style.display = 'none';
+    if (submitText) submitText.textContent = 'Sign In';
+    setTimeout(() => document.getElementById('authEmailInput')?.focus(), 100);
+  }
+
+  if (modal) {
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+}
+
+function closeAuthModal() {
+  const modal = document.getElementById('authModal');
+  if (modal) {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function switchDemoUser(profileKey) {
+  const profile = DEMO_USERS[profileKey];
+  if (!profile) return;
+  setUserSession(profile, true);
+  closeUserDropdown();
+  closeAuthModal();
+  showToast(`Signed in as ${profile.name} (${profile.role}) ✨`, 'success');
+}
+
+function handleAuthFormSubmit(e) {
+  if (e) e.preventDefault();
+
+  const email = document.getElementById('authEmailInput')?.value.trim();
+  const password = document.getElementById('authPasswordInput')?.value.trim();
+  const remember = document.getElementById('authRememberCheckbox')?.checked ?? true;
+
+  if (!email || !password) {
+    showToast('Please enter both email and password.', 'warning');
+    return;
+  }
+
+  if (state.authMode === 'signup') {
+    const name = document.getElementById('authNameInput')?.value.trim() || 'New User';
+    const role = document.getElementById('authRoleInput')?.value.trim() || 'Team Member';
+    const initials = getInitials(name);
+    const avatarGradients = ['bg-indigo', 'bg-teal', 'bg-amber'];
+    const randomAvatar = avatarGradients[Math.floor(Math.random() * avatarGradients.length)];
+
+    const newUser = {
+      id: `user-${Date.now()}`,
+      name,
+      role,
+      email,
+      initials,
+      avatarClass: randomAvatar
+    };
+
+    setUserSession(newUser, remember);
+    closeAuthModal();
+    triggerCelebration();
+    showToast(`Welcome aboard, ${name}! Your account is active. 🎉`, 'success');
+  } else {
+    // Check if matches one of demo users
+    const matchedDemo = Object.values(DEMO_USERS).find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (matchedDemo) {
+      setUserSession(matchedDemo, remember);
+      closeAuthModal();
+      showToast(`Welcome back, ${matchedDemo.name}! 👋`, 'success');
+    } else {
+      // Derive nice name from email
+      const emailPrefix = email.split('@')[0];
+      const derivedName = emailPrefix
+        .replace(/[._-]/g, ' ')
+        .split(' ')
+        .map(s => s.charAt(0).toUpperCase() + s.slice(1))
+        .join(' ') || 'User';
+
+      const customUser = {
+        id: `user-${Date.now()}`,
+        name: derivedName,
+        role: 'Executive Member',
+        email,
+        initials: getInitials(derivedName),
+        avatarClass: 'bg-indigo'
+      };
+
+      setUserSession(customUser, remember);
+      closeAuthModal();
+      showToast(`Signed in successfully as ${derivedName}! 👋`, 'success');
+    }
+  }
+
+  // Clear inputs
+  const emailInput = document.getElementById('authEmailInput');
+  const passInput = document.getElementById('authPasswordInput');
+  const nameInput = document.getElementById('authNameInput');
+  const roleInput = document.getElementById('authRoleInput');
+  if (emailInput) emailInput.value = '';
+  if (passInput) passInput.value = '';
+  if (nameInput) nameInput.value = '';
+  if (roleInput) roleInput.value = '';
+}
+
+function handleSignOut() {
+  closeUserDropdown();
+  const guestUser = {
+    id: 'user-guest',
+    name: 'Guest User',
+    role: 'Guest Access',
+    email: 'guest@horizon.app',
+    initials: 'GU',
+    avatarClass: 'bg-gray'
+  };
+  setUserSession(guestUser, false);
+  localStorage.removeItem(USER_SESSION_KEY);
+  showToast('Signed out. You are now browsing as Guest.', 'info');
+}
+
+// ==========================================================================
+// 14. UI Enhancements: Toast, Confetti, Theme
 // ==========================================================================
 function showToast(message, type = 'info') {
   const container = document.getElementById('toastContainer');
@@ -2172,10 +2449,11 @@ function toggleTheme(isDark) {
 }
 
 // ==========================================================================
-// 14. Event Listeners & Application Initialization
+// 15. Event Listeners & Application Initialization
 // ==========================================================================
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  initUserSession();
   loadTasks();
 
   // Set today's formatted date in navbar
@@ -2489,9 +2767,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // User Authentication & Profile Interactions
+  document.getElementById('userProfileBtn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleUserDropdown();
+  });
+
+  document.getElementById('userDropdown')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  document.querySelectorAll('.demo-user-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const profileKey = btn.getAttribute('data-user-profile');
+      if (profileKey) switchDemoUser(profileKey);
+    });
+  });
+
+  document.querySelectorAll('.demo-login-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      const loginKey = pill.getAttribute('data-login');
+      if (loginKey) switchDemoUser(loginKey);
+    });
+  });
+
+  document.getElementById('openAuthModalBtn')?.addEventListener('click', () => openAuthModal('signin'));
+  document.getElementById('sidebarAuthTriggerBtn')?.addEventListener('click', () => openAuthModal('signin'));
+  document.getElementById('closeAuthModalBtn')?.addEventListener('click', closeAuthModal);
+  document.getElementById('cancelAuthModalBtn')?.addEventListener('click', closeAuthModal);
+
+  const authModalEl = document.getElementById('authModal');
+  if (authModalEl) {
+    authModalEl.addEventListener('click', (e) => {
+      if (e.target === authModalEl) closeAuthModal();
+    });
+  }
+
+  document.getElementById('tabSignInBtn')?.addEventListener('click', () => openAuthModal('signin'));
+  document.getElementById('tabSignUpBtn')?.addEventListener('click', () => openAuthModal('signup'));
+  document.getElementById('authForm')?.addEventListener('submit', handleAuthFormSubmit);
+  document.getElementById('logoutBtn')?.addEventListener('click', handleSignOut);
+
+  document.getElementById('authForgotLink')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('authEmailInput')?.value || 'your registered email';
+    showToast(`Password reset link sent to ${email} 📧`, 'info');
+  });
+
+  // Dismiss dropdown on outside click
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('#userProfileMenu')) {
+      closeUserDropdown();
+    }
+  });
+
   // Keyboard Shortcuts
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeModal();
+    if (e.key === 'Escape') {
+      closeModal();
+      closeAuthModal();
+      closeUserDropdown();
+    }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
       globalSearchInput?.focus();

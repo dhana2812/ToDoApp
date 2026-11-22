@@ -10,7 +10,16 @@ A professional, responsive To-Do and Activity Management web application enginee
 
 ## 🌟 Key Features
 
-1. **55+ Preloaded Demo Activities**:
+1. **User Sign-In & Profile System**:
+   - **Active Session Pill & Dropdown**: Displays the signed-in user's initials, name, and professional role in both the top navigation bar and the sidebar footer.
+   - **1-Click Demo Switcher**: Instant switching between 3 realistic executive profiles for presentations:
+     - 🟣 **Alex Morgan** (`alex.morgan@company.com`) — Executive Director
+     - 🟢 **Sarah Chen** (`sarah.chen@product.io`) — Senior Product Manager
+     - 🟡 **David Kumar** (`david.k@techlead.dev`) — Principal Architect
+   - **Sign In / Create Account Modal**: Full authentication dialog supporting custom credentials, role designation, custom avatar generation, and persistent browser session storage.
+   - **Personalized Executive Greeting**: Dynamic time-of-day greeting addressed directly to the signed-in user (e.g., *"Good morning, Alex!"*).
+
+2. **55+ Preloaded Demo Activities**:
    - Ready for live demonstrations with realistic corporate, technical, and life tasks across **Work**, **Project**, **Finance**, **Health**, **Study**, and **Personal** categories.
    - Live breakdown:
      - **12 Today activities** (6 completed, 6 pending)

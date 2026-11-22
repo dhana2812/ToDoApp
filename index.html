@@ -103,6 +103,18 @@
       </div>
 
       <div class="sidebar-footer">
+        <!-- Signed-in User Card -->
+        <div class="sidebar-user-card" id="sidebarUserCard" title="Active user profile">
+          <div class="user-avatar-sm bg-indigo" id="sidebarAvatar">AM</div>
+          <div class="sidebar-user-info">
+            <span class="sidebar-user-name" id="sidebarUserName">Alex Morgan</span>
+            <span class="sidebar-user-role" id="sidebarUserRole">Executive Lead</span>
+          </div>
+          <button class="sidebar-auth-trigger" id="sidebarAuthTriggerBtn" title="Switch user / Sign in">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          </button>
+        </div>
+
         <div class="productivity-mini-card">
           <div class="prod-top">
             <span class="prod-label"><i class="fa-solid fa-gauge-high"></i> Completion Rate</span>
@@ -175,6 +187,62 @@
             <i class="fa-solid fa-plus"></i>
             <span>Add Activity</span>
           </button>
+
+          <!-- User Profile & Authentication Dropdown -->
+          <div class="user-profile-menu" id="userProfileMenu">
+            <button class="user-profile-btn" id="userProfileBtn" title="Account & Profile">
+              <div class="user-avatar bg-indigo" id="navAvatar">AM</div>
+              <div class="user-meta-preview">
+                <span class="user-name" id="navUserName">Alex Morgan</span>
+                <span class="user-role" id="navUserRole">Executive Lead</span>
+              </div>
+              <i class="fa-solid fa-chevron-down user-chevron"></i>
+            </button>
+
+            <!-- User Dropdown Menu -->
+            <div class="user-dropdown" id="userDropdown" style="display: none;">
+              <div class="user-dropdown-header">
+                <div class="user-avatar-lg bg-indigo" id="dropdownAvatar">AM</div>
+                <div class="user-dropdown-info">
+                  <strong id="dropdownUserName">Alex Morgan</strong>
+                  <span id="dropdownUserEmail">alex.morgan@company.com</span>
+                  <span class="user-badge" id="dropdownUserRole">Executive Lead</span>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-section-title">Switch Demo Account</div>
+              <button type="button" class="dropdown-item demo-user-btn" data-user-profile="alex">
+                <span class="demo-avatar bg-indigo">AM</span>
+                <div class="demo-user-meta">
+                  <span>Alex Morgan</span>
+                  <small>Executive Director</small>
+                </div>
+              </button>
+              <button type="button" class="dropdown-item demo-user-btn" data-user-profile="sarah">
+                <span class="demo-avatar bg-teal">SC</span>
+                <div class="demo-user-meta">
+                  <span>Sarah Chen</span>
+                  <small>Senior Product Manager</small>
+                </div>
+              </button>
+              <button type="button" class="dropdown-item demo-user-btn" data-user-profile="david">
+                <span class="demo-avatar bg-amber">DK</span>
+                <div class="demo-user-meta">
+                  <span>David Kumar</span>
+                  <small>Principal Architect</small>
+                </div>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button type="button" class="dropdown-item" id="openAuthModalBtn">
+                <i class="fa-solid fa-user-gear text-indigo"></i>
+                <span>Sign In / Custom Account</span>
+              </button>
+              <button type="button" class="dropdown-item text-rose" id="logoutBtn">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -655,6 +723,95 @@
           </div>
         </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Modal: User Authentication (Sign In / Register) -->
+  <div class="modal-overlay" id="authModal" aria-hidden="true">
+    <div class="modal-dialog auth-dialog">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-icon-badge bg-indigo-soft text-indigo">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div>
+            <h3 id="authModalTitle">Account Sign In</h3>
+            <p id="authModalSubtitle">Sign in to sync activities and personalize your horizon workspace</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="closeAuthModalBtn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body auth-modal-body">
+        <!-- Auth Tabs: Sign In vs Sign Up -->
+        <div class="auth-tabs">
+          <button type="button" class="auth-tab-btn active" id="tabSignInBtn">Sign In</button>
+          <button type="button" class="auth-tab-btn" id="tabSignUpBtn">Create Account</button>
+        </div>
+
+        <!-- Quick 1-Click Demo Profiles -->
+        <div class="quick-demo-users-box">
+          <span class="quick-demo-label"><i class="fa-solid fa-bolt text-amber"></i> Quick 1-Click Demo Sign In:</span>
+          <div class="quick-demo-btns-row">
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="alex">
+              <span class="pill-avatar bg-indigo">AM</span> Alex (Executive)
+            </button>
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="sarah">
+              <span class="pill-avatar bg-teal">SC</span> Sarah (Product)
+            </button>
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="david">
+              <span class="pill-avatar bg-amber">DK</span> David (Tech Lead)
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-divider">
+          <span>or enter credentials</span>
+        </div>
+
+        <!-- Sign In / Sign Up Form -->
+        <form id="authForm" class="auth-form-fields">
+          <!-- Full Name (Only shown in Sign Up mode) -->
+          <div class="form-group" id="authNameGroup" style="display: none;">
+            <label for="authNameInput" class="form-label required">Full Name</label>
+            <input type="text" id="authNameInput" class="form-input" placeholder="e.g., Alexandra Reed">
+          </div>
+
+          <!-- Professional Role (Only shown in Sign Up mode) -->
+          <div class="form-group" id="authRoleGroup" style="display: none;">
+            <label for="authRoleInput" class="form-label">Professional Role / Title</label>
+            <input type="text" id="authRoleInput" class="form-input" placeholder="e.g., Senior Strategy Consultant">
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="authEmailInput" class="form-label required">Email Address</label>
+            <input type="email" id="authEmailInput" class="form-input" placeholder="name@company.com" required>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="authPasswordInput" class="form-label required">Password</label>
+            <input type="password" id="authPasswordInput" class="form-input" placeholder="••••••••" required>
+          </div>
+
+          <div class="auth-extra-row">
+            <label class="auth-remember-label">
+              <input type="checkbox" id="authRememberCheckbox" checked>
+              <span>Stay signed in on this device</span>
+            </label>
+            <a href="#" class="auth-forgot-link" id="authForgotLink">Forgot password?</a>
+          </div>
+
+          <div class="modal-footer" style="margin-top: 10px;">
+            <button type="button" class="btn-subtle" id="cancelAuthModalBtn">Cancel</button>
+            <button type="submit" class="btn-primary" id="submitAuthBtn">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i>
+              <span id="submitAuthBtnText">Sign In</span>
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 
