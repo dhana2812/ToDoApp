@@ -1,6 +1,6 @@
 # TaskHorizon - Executive Activity & Time-Horizon Tracker
 
-A professional, responsive To-Do and Activity Management web application engineered for executive clarity, high productivity, and seamless time-horizon tracking across:
+A professional, responsive To-Do and Activity Management web application engineered for executive clarity, team delegation, and seamless time-horizon tracking across:
 - ☀️ **Today** (24-Hour Horizon)
 - 📅 **This Week** (7-Day Horizon)
 - 🗓️ **This Month** (30-Day Strategic Horizon)
@@ -10,82 +10,80 @@ A professional, responsive To-Do and Activity Management web application enginee
 
 ## 🌟 Key Features
 
-1. **User Sign-In & Profile System**:
-   - **Active Session Pill & Dropdown**: Displays the signed-in user's initials, name, and professional role in both the top navigation bar and the sidebar footer.
-   - **1-Click Demo Switcher**: Instant switching between 3 realistic executive profiles for presentations:
-     - 🟣 **Alex Morgan** (`alex.morgan@company.com`) — Executive Director
-     - 🟢 **Sarah Chen** (`sarah.chen@product.io`) — Senior Product Manager
-     - 🟡 **David Kumar** (`david.k@techlead.dev`) — Principal Architect
-   - **Sign In / Create Account Modal**: Full authentication dialog supporting custom credentials, role designation, custom avatar generation, and persistent browser session storage.
-   - **Personalized Executive Greeting**: Dynamic time-of-day greeting addressed directly to the signed-in user (e.g., *"Good morning, Alex!"*).
+### 1. Dual Dashboard Views: Admin vs Individual User
+- 👑 **Admin Command Center**:
+  - **Organization-Wide Oversight**: Monitors all 55 team activities across members with org completion velocity and overdue alerts.
+  - **Live Team Workload Grid**: Cards for each team member (**Alex Morgan**, **Sarah Chen**, **David Kumar**) showcasing individual assigned counts, completed, pending, overdue metrics, and animated progress bars.
+  - **1-Click Member Activity Inspection**: Jump directly to tasks filtered to any specific team member.
+  - **Administrative Overdue Escalation & Rebalance**: Bulk reschedule overdue tasks across the team or per selected member with one click.
+  - **Executive Team Audit Report Export**: Download JSON audit report containing organizational metrics, per-member completion rates, and an escalated overdue activity register.
+  - **Cross-Member Workload Analytics**: Chart.js comparative stacked bar chart contrasting assigned vs completed workload across all active team members.
+- 👤 **Individual User Workspace**:
+  - **Personal Horizon Workspace**: Tailored outlook addressing the user personally (*"Good morning, Alex!"*).
+  - **Personal Horizon KPIs**: Metrics and progress rings reflect the individual's assigned activities ("My Today", "My This Week", "My This Month", "My Overdue").
+  - **Personal Focus Checklist**: Quick actions focused on the user's immediate tasks for the day.
+  - **Workspace Scope Toggle**: Instant toggle between **"My Activities"** (personal horizon) and **"Team Shared"** (all 55 team activities) directly from the dashboard and tasks view.
 
-2. **55+ Preloaded Demo Activities**:
-   - Ready for live demonstrations with realistic corporate, technical, and life tasks across **Work**, **Project**, **Finance**, **Health**, **Study**, and **Personal** categories.
-   - Live breakdown:
-     - **12 Today activities** (6 completed, 6 pending)
-     - **18 This Week activities** (5 completed, 13 pending)
-     - **18 This Month activities** (3 completed, 15 pending)
-     - **7 Overdue activities** (highlighted in crimson with instant 1-click "Reschedule to Today" action)
-   - One-click **"55 Demo Tasks"** button in the sidebar footer to instantly reload the dataset anytime during presentations.
+### 2. Individual Sign-In & Role-Based Authentication
+- **1-Click Demo Profiles (Admin & Individual)**:
+  - 👑 **Eleanor Vance** (`admin@horizon.app`) — Organization Administrator (Admin Dashboard)
+  - 👤 **Alex Morgan** (`alex.morgan@company.com`) — Executive Director (19 assigned activities)
+  - 👤 **Sarah Chen** (`sarah.chen@product.io`) — Senior Product Manager (18 assigned activities)
+  - 👤 **David Kumar** (`david.k@techlead.dev`) — Principal Architect (18 assigned activities)
+- **Role-Based Dynamic Navigation**:
+  - Navbar and sidebar dynamically adapt titles and icons: `"Admin Dashboard"` (chart-pie) vs `"User Dashboard"` (compass), and `"All Team Activities"` vs `"My Activities"`.
+  - Executive status badge in navbar: `👑 Administrator` (crimson) vs `👤 Team Member` (emerald).
+- **Custom Sign In / Sign Up Modal**:
+  - Full modal supporting sign in or registration with role designation (User vs Admin) and automatic avatar generation.
+  - Persistent browser session storage with `localStorage`.
 
-2. **Interactive Calendar View**:
-   - **Monthly Grid**: Full 35/42-cell interactive calendar view plotting all activities on their respective due dates.
-   - **Task Pills & Indicators**: Live task chips with priority dots, category badges, strikethrough on completion, and overdue alerts.
-   - **Day Inspector Side Panel**: Clicking any date opens the side inspector detailing all scheduled activities for that day, complete with status toggles, edits, and a "+ Add on Date" quick action.
-   - **Month Navigation**: Effortlessly jump between months with `<` and `>`, or click `Today` to return to the active date.
+### 3. Task Assignment & Delegation
+- Every task includes an **Assignee** with initials, name, and colored avatar tag (`AM` Alex, `SC` Sarah, `DK` David).
+- **Task Modal Assignee Selector**: Assign new activities to any team member or reassign existing ones.
+- **Table & Grid Assignee Badges**: Displays task owner on cards, table rows, and dashboard focus items.
+- **Admin Member Sorter & Filter**: Filter views by individual team member or organization-wide.
 
-3. **Executive Visual Analytics Dashboard**:
-   - **Progress Radial Ring**: Circular SVG completion meter calculating overall progress velocity in real time.
-   - **4 Time-Horizon Metric Cards**: Dedicated KPI cards for Today, This Week, This Month, and Overdue with animated progress bars and exact date range badges.
-   - **Interactive Chart.js Visualizations**:
-     - 📊 **Status Distribution Doughnut**: Real-time ratio of Completed vs Still Not Done vs Overdue.
-     - 📈 **Time Horizon Load Bar Chart**: Stacked workload comparison across Today, This Week, and This Month.
-     - 🎯 **Category Allocation Mix**: Breakdown across Work, Project, Finance, Health, and Study.
-   - **Today's Quick Focus Section**: Dedicated dashboard checklist to complete today's critical items without switching views.
+### 4. 55 Preloaded Demo Activities
+- Complete dataset preloaded across **Work**, **Project**, **Finance**, **Health**, **Study**, and **Personal** categories:
+  - **Alex Morgan**: 19 tasks (5 completed, 11 pending, 3 overdue)
+  - **Sarah Chen**: 18 tasks (5 completed, 11 pending, 2 overdue)
+  - **David Kumar**: 18 tasks (4 completed, 12 pending, 2 overdue)
+  - **Total**: 14 completed, 34 pending, 7 overdue = 55 activities!
+- One-click **"55 Demo Tasks"** button in sidebar footer to restore initial dataset anytime.
 
-3. **Task Lifecycle & Productivity Tools**:
-   - **Instant Status Toggle**: Single-click checkbox to toggle between Completed and Still Not Done (with animated celebratory confetti!).
-   - **Overdue Task Tracking & Zero-Overlap Horizons**:
-     - Strict mutually exclusive horizon classification: Overdue items are isolated to their own dedicated horizon (`badge-rose`) and excluded from upcoming Week/Month buckets.
-     - Live count partition across 55 tasks: Today (12), This Week (18), This Month (18), Overdue (7) = 55 total.
-     - Calendar cells with past-due tasks display a `⚠️ Past Due` badge and soft pastel rose highlight.
-     - Day Inspector side drawer displays overdue badges, relative due times (`Yesterday (Overdue)`, `3d overdue`), and 1-click `⚡ Today` reschedule buttons.
-   - **1-Click Reschedule**: Instant `⚡ Today` button on overdue cards to reschedule them to Today without opening modals.
-   - **Overdue Banner**: High-visibility alert banner with a bulk "Reschedule All Overdue to Today" button.
-   - **Clear / Archive Completed**: One-click cleanup to keep boards pristine.
-   - **Search & Filters**: Search with `Ctrl + K` shortcut; filter by status, priority, category, or horizon.
-   - **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View** with overdue row tinting.
-   - **Print Report**: Instant formatted agenda printing via `@media print`.
+### 5. Interactive Calendar View
+- **Monthly Grid**: Full 35/42-cell calendar plotting all activities on their due dates.
+- **Task Chips & Indicators**: Color-coded chips with priority dots, category badges, and overdue alert tags.
+- **Day Inspector Side Panel**: Clicking any day opens the inspector detailing scheduled activities, status toggles, edits, and 1-click overdue reschedule buttons.
+- **Month Navigation**: Jump between months or click `Today` to return.
 
-4. **Executive Pastel Design System & Local Persistence**:
-   - **Professional Pastel Palette**: Engineered for high visual comfort and executive clarity with calming porcelain surfaces (`#f7f9fc`), soft ambient gradients, and crisp typography.
-   - **Harmonious Pastel Horizons & Status Badges**:
-     - ☀️ **Today**: Pastel Apricot & Buttercup (`#d97706` / `#fef3c7`)
-     - 📅 **This Week**: Pastel Periwinkle & Lavender (`#6366f1` / `#ede9fe`)
-     - 🗓️ **This Month**: Pastel Mint & Sage Seafoam (`#0d9488` / `#ccfbf1`)
-     - ⚠️ **Overdue**: Pastel Coral & Petal Rose (`#e11d48` / `#ffe4e6`)
-     - ✅ **Completed**: Pastel Jade & Matcha (`#059669` / `#d1fae5`)
-   - **Dual Pastel Modes**: Instant 1-click toggle between **Pastel Day** (Alabaster porcelain) and **Pastel Dusk** (Velvet slate twilight).
-   - **Automatic Persistence**: Full state saved automatically to browser `localStorage` with JSON export/import options.
+### 6. Executive Pastel Design System
+- **Professional Pastel Palette**: Engineered for high visual comfort with calming porcelain surfaces (`#f7f9fc`), soft ambient gradients, and crisp typography.
+- **Harmonious Pastel Horizons & Status Badges**:
+  - ☀️ **Today**: Pastel Apricot & Buttercup (`#d97706` / `#fef3c7`)
+  - 📅 **This Week**: Pastel Periwinkle & Lavender (`#6366f1` / `#ede9fe`)
+  - 🗓️ **This Month**: Pastel Mint & Sage Seafoam (`#0d9488` / `#ccfbf1`)
+  - ⚠️ **Overdue**: Pastel Coral & Petal Rose (`#e11d48` / `#ffe4e6`)
+  - ✅ **Completed**: Pastel Jade & Matcha (`#059669` / `#d1fae5`)
+- **Dual Pastel Modes**: Instant 1-click toggle between **Pastel Day** (porcelain alabaster) and **Pastel Dusk** (slate velvet twilight).
+- **Dual Display Modes**: Seamlessly toggle between **Card Grid View** and **Executive Table View**.
 
 ---
 
 ## 🧪 Verified End-to-End Test Suite
 
-The app includes an automated 34-assertion End-to-End test suite verifying:
-- ✅ 55 initial demo tasks generate cleanly across all categories.
-- ✅ Exactly 7 tasks classified as overdue with zero overlap into upcoming Week or Month horizons.
-- ✅ Mutually exclusive horizon math: Today (12) + Week (18) + Month (18) + Overdue (7) = 55 total.
-- ✅ Overdue tasks accurately receive the `⚠️ Overdue` / `badge-rose` badge in Grid, Table, Calendar, and Day Inspector views.
-- ✅ Filter by Scope (`overdue`) returns all 7 overdue tasks even with status filters applied.
-- ✅ Single-task reschedule moves overdue item to Today, updates KPI counters dynamically.
-- ✅ Bulk reschedule clears overdue count to 0 and reallocates items to Today.
-- ✅ Real-time statistics, progress percentages, and Chart.js datasets remain consistent across all interactions.
+An automated End-to-End test suite verifies:
+- ✅ **Role-Based Dashboards**: Eleanor Vance logs in as Administrator with organization oversight; Alex Morgan, Sarah Chen, and David Kumar log in as individual users with personal horizon views.
+- ✅ **Task Assignment Breakdown**: Alex (19 tasks), Sarah (18 tasks), David (18 tasks) accurately sum to 55 total tasks.
+- ✅ **User Scope Switching**: Toggling between `"My Activities"` and `"Team Shared"` filters tasks correctly.
+- ✅ **Overdue Task Tracking**: Exactly 7 overdue tasks with zero overlap into upcoming Week or Month horizons.
+- ✅ **Per-Member Overdue Rescheduling**: Admin can reschedule overdue tasks for specific members or rebalance all overdue tasks across the team.
+- ✅ **Team Audit Export**: Exports full organizational metrics, team member workloads, and escalated overdue tasks.
 
 ---
 
 ## 🚀 Running the App
 
 1. Navigate to the project directory: `c:\Users\dhana\ToDo\ToDoApp\`
-2. Double-click or open [index.html](file:///c:/Users/dhana/ToDo/ToDoApp/index.html) in any modern browser (Chrome, Edge, Firefox, Brave, Safari).
+2. Open [index.html](file:///c:/Users/dhana/ToDo/ToDoApp/index.html) in any modern web browser.
 3. Zero installation or server dependencies required!

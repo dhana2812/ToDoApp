@@ -12,11 +12,21 @@ const THEME_KEY = 'taskhorizon_theme';
 const USER_SESSION_KEY = 'taskhorizon_user_session';
 
 const DEMO_USERS = {
+  admin: {
+    id: 'user-admin',
+    name: 'Eleanor Vance',
+    initials: 'EV',
+    role: 'Chief Operations Officer & Admin',
+    roleType: 'admin',
+    email: 'admin@horizon.app',
+    avatarClass: 'bg-rose'
+  },
   alex: {
     id: 'user-alex',
     name: 'Alex Morgan',
     initials: 'AM',
     role: 'Executive Director',
+    roleType: 'user',
     email: 'alex.morgan@company.com',
     avatarClass: 'bg-indigo'
   },
@@ -25,6 +35,7 @@ const DEMO_USERS = {
     name: 'Sarah Chen',
     initials: 'SC',
     role: 'Senior Product Manager',
+    roleType: 'user',
     email: 'sarah.chen@product.io',
     avatarClass: 'bg-teal'
   },
@@ -33,6 +44,7 @@ const DEMO_USERS = {
     name: 'David Kumar',
     initials: 'DK',
     role: 'Principal Architect',
+    roleType: 'user',
     email: 'david.k@techlead.dev',
     avatarClass: 'bg-amber'
   }
@@ -48,6 +60,8 @@ const state = {
     status: 'all',         // 'all' | 'pending' | 'completed' | 'overdue'
     priority: 'all',       // 'all' | 'high' | 'medium' | 'low'
     category: 'all',       // 'all' | category name
+    userScope: 'all',      // 'all' | 'my'
+    selectedMember: 'all', // 'all' | member ID
     search: ''
   },
   sortBy: 'dueDateAsc',
@@ -252,7 +266,7 @@ function generateInitialSampleTasks() {
   const d24 = getDayOffsetDate(24); // In 24 days
   const d27 = getDayOffsetDate(27); // In 27 days
 
-  return [
+  const rawTasks = [
     // ------------------------------------------------------------------------
     // HORIZON: TODAY (12 Tasks: 6 Completed, 6 Pending)
     // ------------------------------------------------------------------------
@@ -874,6 +888,23 @@ function generateInitialSampleTasks() {
       createdAt: new Date().toISOString()
     }
   ];
+
+  const teamAssignees = [
+    { id: 'user-alex', name: 'Alex Morgan', avatar: 'AM', avatarClass: 'bg-indigo' },
+    { id: 'user-sarah', name: 'Sarah Chen', avatar: 'SC', avatarClass: 'bg-teal' },
+    { id: 'user-david', name: 'David Kumar', avatar: 'DK', avatarClass: 'bg-amber' }
+  ];
+
+  return rawTasks.map((task, index) => {
+    const assignee = teamAssignees[index % teamAssignees.length];
+    return {
+      ...task,
+      assigneeId: task.assigneeId || assignee.id,
+      assigneeName: task.assigneeName || assignee.name,
+      assigneeAvatar: task.assigneeAvatar || assignee.avatar,
+      assigneeAvatarClass: task.assigneeAvatarClass || assignee.avatarClass
+    };
+  });
 }
 
 // ==========================================================================
@@ -883,8 +914,26 @@ function loadTasks() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw);
+      let parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        const teamAssignees = [
+          { id: 'user-alex', name: 'Alex Morgan', avatar: 'AM', avatarClass: 'bg-indigo' },
+          { id: 'user-sarah', name: 'Sarah Chen', avatar: 'SC', avatarClass: 'bg-teal' },
+          { id: 'user-david', name: 'David Kumar', avatar: 'DK', avatarClass: 'bg-amber' }
+        ];
+        parsed = parsed.map((task, idx) => {
+          if (!task.assigneeId) {
+            const a = teamAssignees[idx % teamAssignees.length];
+            return {
+              ...task,
+              assigneeId: a.id,
+              assigneeName: a.name,
+              assigneeAvatar: a.avatar,
+              assigneeAvatarClass: a.avatarClass
+            };
+          }
+          return task;
+        });
         state.tasks = parsed;
         return;
       }
@@ -910,6 +959,13 @@ function saveTasks() {
 // ==========================================================================
 function getFilteredAndSortedTasks() {
   let list = [...state.tasks];
+
+  // 0. User Scope & Admin Member Filter
+  if (state.currentUser && state.currentUser.roleType === 'user' && state.filters.userScope === 'my') {
+    list = list.filter(t => t.assigneeId === state.currentUser.id);
+  } else if (state.filters.selectedMember && state.filters.selectedMember !== 'all') {
+    list = list.filter(t => t.assigneeId === state.filters.selectedMember);
+  }
 
   // 1. Scope Filter
   if (state.filters.scope === 'today') {
@@ -1006,6 +1062,48 @@ function calculateStats() {
 
   const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
+  // Individual user stats (for current logged in user)
+  const currentUserId = state.currentUser ? state.currentUser.id : 'user-alex';
+  const myTasks = state.tasks.filter(t => t.assigneeId === currentUserId);
+  const myTotal = myTasks.length;
+  const myCompleted = myTasks.filter(t => t.status === 'completed').length;
+  const myOverdueTasks = myTasks.filter(isTaskOverdue);
+  const myOverdue = myOverdueTasks.length;
+  const myStillNotDone = myTasks.filter(t => t.status !== 'completed' && !isTaskOverdue(t)).length;
+
+  const myTodayTasks = myTasks.filter(isTaskToday);
+  const myTodayDone = myTodayTasks.filter(t => t.status === 'completed').length;
+  const myTodayPending = myTodayTasks.length - myTodayDone;
+
+  const myWeekTasks = myTasks.filter(isTaskThisWeek);
+  const myWeekDone = myWeekTasks.filter(t => t.status === 'completed').length;
+  const myWeekPending = myWeekTasks.length - myWeekDone;
+
+  const myMonthTasks = myTasks.filter(isTaskThisMonth);
+  const myMonthDone = myMonthTasks.filter(t => t.status === 'completed').length;
+  const myMonthPending = myMonthTasks.length - myMonthDone;
+
+  const myPercent = myTotal > 0 ? Math.round((myCompleted / myTotal) * 100) : 0;
+
+  // Team Member Breakdown (for Admin Dashboard)
+  const teamMembers = [DEMO_USERS.alex, DEMO_USERS.sarah, DEMO_USERS.david];
+  const memberStats = teamMembers.map(m => {
+    const tasks = state.tasks.filter(t => t.assigneeId === m.id);
+    const mTotal = tasks.length;
+    const mCompleted = tasks.filter(t => t.status === 'completed').length;
+    const mOverdue = tasks.filter(isTaskOverdue).length;
+    const mPending = mTotal - mCompleted;
+    const mPercent = mTotal > 0 ? Math.round((mCompleted / mTotal) * 100) : 0;
+    return {
+      ...m,
+      total: mTotal,
+      completed: mCompleted,
+      pending: mPending,
+      overdue: mOverdue,
+      percent: mPercent
+    };
+  });
+
   return {
     total,
     completed,
@@ -1014,7 +1112,18 @@ function calculateStats() {
     percent,
     today: { total: todayTasks.length, done: todayDone, pending: todayPending },
     week: { total: weekTasks.length, done: weekDone, pending: weekPending },
-    month: { total: monthTasks.length, done: monthDone, pending: monthPending }
+    month: { total: monthTasks.length, done: monthDone, pending: monthPending },
+    my: {
+      total: myTotal,
+      completed: myCompleted,
+      overdue: myOverdue,
+      stillNotDone: myStillNotDone,
+      percent: myPercent,
+      today: { total: myTodayTasks.length, done: myTodayDone, pending: myTodayPending },
+      week: { total: myWeekTasks.length, done: myWeekDone, pending: myWeekPending },
+      month: { total: myMonthTasks.length, done: myMonthDone, pending: myMonthPending }
+    },
+    memberStats
   };
 }
 
@@ -1023,34 +1132,132 @@ function calculateStats() {
 // ==========================================================================
 function updateDashboardUI() {
   const stats = calculateStats();
+  const isAdmin = state.currentUser && state.currentUser.roleType === 'admin';
+  const isMyScope = !isAdmin && state.filters.userScope === 'my';
+  const activeStats = isMyScope ? stats.my : stats;
+
+  // Toggle Admin Command Center vs User Scope Banner
+  const adminSec = document.getElementById('adminCommandSection');
+  const userBanner = document.getElementById('userScopeBanner');
+  const tasksUserScopeRow = document.getElementById('tasksUserScopeRow');
+  const filterMemberGroup = document.getElementById('filterMemberGroup');
+
+  if (adminSec) adminSec.style.display = isAdmin ? 'flex' : 'none';
+  if (userBanner) userBanner.style.display = !isAdmin ? 'flex' : 'none';
+  if (tasksUserScopeRow) tasksUserScopeRow.style.display = !isAdmin ? 'flex' : 'none';
+  if (filterMemberGroup) filterMemberGroup.style.display = isAdmin ? 'flex' : 'none';
+
+  // Render Admin Team Cards Grid if Admin
+  if (isAdmin) {
+    const teamCardsGrid = document.getElementById('teamCardsGrid');
+    if (teamCardsGrid) {
+      teamCardsGrid.innerHTML = stats.memberStats.map(m => `
+        <div class="team-member-card">
+          <div class="member-card-top">
+            <div class="member-avatar ${m.avatarClass}">${m.initials}</div>
+            <div class="member-info">
+              <h4>${escapeHtml(m.name)}</h4>
+              <span class="member-role">${escapeHtml(m.role)}</span>
+              <span class="member-email">${escapeHtml(m.email)}</span>
+            </div>
+            <span class="member-health-badge ${m.overdue > 0 ? 'badge-rose' : 'badge-emerald'}">
+              ${m.overdue > 0 ? `⚠️ ${m.overdue} Overdue` : '✅ On Track'}
+            </span>
+          </div>
+          <div class="member-stats-row">
+            <div class="stat-col">
+              <span class="stat-num">${m.total}</span>
+              <span class="stat-lbl">Assigned</span>
+            </div>
+            <div class="stat-col text-emerald">
+              <span class="stat-num">${m.completed}</span>
+              <span class="stat-lbl">Done</span>
+            </div>
+            <div class="stat-col text-amber">
+              <span class="stat-num">${m.pending}</span>
+              <span class="stat-lbl">Pending</span>
+            </div>
+            <div class="stat-col text-rose">
+              <span class="stat-num">${m.overdue}</span>
+              <span class="stat-lbl">Overdue</span>
+            </div>
+          </div>
+          <div class="member-progress-wrapper">
+            <div class="member-progress-bar">
+              <div class="member-progress-fill" style="width: ${m.percent}%"></div>
+            </div>
+            <span class="member-progress-pct">${m.percent}% Done</span>
+          </div>
+          <div class="member-card-footer">
+            <button class="btn-subtle btn-inspect-member" data-member-id="${m.id}" title="Filter activities to ${escapeHtml(m.name)}">
+              <i class="fa-solid fa-list-check"></i> Tasks (${m.total})
+            </button>
+            ${m.overdue > 0 ? `
+              <button class="btn-quick-reschedule btn-member-reschedule" data-member-reschedule="${m.id}" title="Reschedule ${escapeHtml(m.name)}'s overdue tasks to Today">
+                <i class="fa-solid fa-calendar-check text-amber"></i> Clear Overdue
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    setElementText('adminOverdueAlertBadge', `⚠️ ${stats.overdue} Team Overdue`);
+  }
+
+  // Update User Scope Banner if User
+  if (!isAdmin && state.currentUser) {
+    const userScopeAvatar = document.getElementById('userScopeAvatar');
+    if (userScopeAvatar) {
+      userScopeAvatar.textContent = state.currentUser.initials;
+      userScopeAvatar.className = `user-scope-avatar ${state.currentUser.avatarClass || 'bg-indigo'}`;
+    }
+    setElementText('userScopeTitle', `${state.currentUser.name}'s Horizon Workspace`);
+    setElementText('userScopeSubtitle', `Showing ${isMyScope ? 'your assigned personal activities' : 'all team shared activities'}`);
+    setElementText('scopeMyCount', stats.my.total);
+    setElementText('scopeAllCount', stats.total);
+    setElementText('tasksScopeMyCount', stats.my.total);
+    setElementText('tasksScopeAllCount', stats.total);
+
+    document.querySelectorAll('[data-user-scope]').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-user-scope') === state.filters.userScope);
+    });
+
+    const tasksScopeHint = document.getElementById('tasksScopeHint');
+    if (tasksScopeHint) {
+      tasksScopeHint.textContent = isMyScope 
+        ? `Showing only activities assigned to ${state.currentUser.name}`
+        : `Showing all 55 shared team activities across members`;
+    }
+  }
 
   // Sidebar Counts
-  setElementText('countAll', stats.total);
-  setElementText('countToday', stats.today.total);
-  setElementText('countWeek', stats.week.total);
-  setElementText('countMonth', stats.month.total);
-  setElementText('countOverdue', stats.overdue);
+  setElementText('countAll', activeStats.total);
+  setElementText('countToday', activeStats.today.total);
+  setElementText('countWeek', activeStats.week.total);
+  setElementText('countMonth', activeStats.month.total);
+  setElementText('countOverdue', activeStats.overdue);
 
   // Tab Counts
-  setElementText('tabCountAll', stats.total);
-  setElementText('tabCountToday', stats.today.total);
-  setElementText('tabCountWeek', stats.week.total);
-  setElementText('tabCountMonth', stats.month.total);
-  setElementText('tabCountOverdue', stats.overdue);
+  setElementText('tabCountAll', activeStats.total);
+  setElementText('tabCountToday', activeStats.today.total);
+  setElementText('tabCountWeek', activeStats.week.total);
+  setElementText('tabCountMonth', activeStats.month.total);
+  setElementText('tabCountOverdue', activeStats.overdue);
 
   // Sidebar Productivity Mini-Gauge
-  setElementText('sidebarProdRate', `${stats.percent}%`);
-  setElementWidth('sidebarProdFill', `${stats.percent}%`);
+  setElementText('sidebarProdRate', `${activeStats.percent}%`);
+  setElementWidth('sidebarProdFill', `${activeStats.percent}%`);
 
   // Hero Card & Radial Meter
   const heroProgressText = document.getElementById('heroProgressText');
   const heroProgressCircle = document.getElementById('heroProgressCircle');
   const heroSummaryText = document.getElementById('heroSummaryText');
 
-  if (heroProgressText) heroProgressText.textContent = `${stats.percent}%`;
+  if (heroProgressText) heroProgressText.textContent = `${activeStats.percent}%`;
   if (heroProgressCircle) {
     const circumference = 2 * Math.PI * 42; // r=42 -> ~263.89
-    const offset = circumference - (stats.percent / 100) * circumference;
+    const offset = circumference - (activeStats.percent / 100) * circumference;
     heroProgressCircle.style.strokeDashoffset = offset;
   }
 
@@ -1062,18 +1269,24 @@ function updateDashboardUI() {
     if (currentHour < 12) timeGreeting = 'Good morning';
     else if (currentHour < 17) timeGreeting = 'Good afternoon';
     const userFirstName = state.currentUser ? state.currentUser.name.split(' ')[0] : 'there';
-    heroGreetingText.textContent = `${timeGreeting}, ${userFirstName}! Here's your executive activity outlook.`;
+    if (isAdmin) {
+      heroGreetingText.textContent = `${timeGreeting}, Eleanor! Organization & Team Command Center.`;
+    } else {
+      heroGreetingText.textContent = `${timeGreeting}, ${userFirstName}! Here's your personal activity outlook.`;
+    }
   }
 
   if (heroSummaryText) {
-    if (stats.overdue > 0) {
-      heroSummaryText.innerHTML = `⚠️ You have <strong style="color:var(--status-overdue);">${stats.overdue} overdue activities</strong> requiring prompt action, and <strong>${stats.today.pending} tasks</strong> remaining today.`;
-    } else if (stats.today.pending > 0) {
-      heroSummaryText.innerHTML = `🎯 <strong>${stats.today.pending} activities</strong> scheduled for today. You are making steady progress!`;
-    } else if (stats.total > 0 && stats.completed === stats.total) {
+    if (isAdmin) {
+      heroSummaryText.innerHTML = `👑 Monitoring <strong style="color:var(--color-primary);">${stats.total} total team activities</strong> across 3 active members. <strong style="color:var(--status-overdue);">${stats.overdue} overdue items</strong> require administrative attention.`;
+    } else if (activeStats.overdue > 0) {
+      heroSummaryText.innerHTML = `⚠️ You have <strong style="color:var(--status-overdue);">${activeStats.overdue} overdue activities</strong> requiring prompt action, and <strong>${activeStats.today.pending} tasks</strong> remaining today.`;
+    } else if (activeStats.today.pending > 0) {
+      heroSummaryText.innerHTML = `🎯 <strong>${activeStats.today.pending} activities</strong> scheduled for today. You are making steady progress!`;
+    } else if (activeStats.total > 0 && activeStats.completed === activeStats.total) {
       heroSummaryText.innerHTML = `🎉 Outstanding execution! All activities have been successfully marked completed.`;
     } else {
-      heroSummaryText.innerHTML = `✨ Today is organized. You have ${stats.week.total} tasks lined up for this week.`;
+      heroSummaryText.innerHTML = `✨ Today is organized. You have ${activeStats.week.total} tasks lined up for this week.`;
     }
   }
 
@@ -1083,18 +1296,18 @@ function updateDashboardUI() {
   const heroMonthPill = document.getElementById('heroMonthPill');
   const heroOverduePill = document.getElementById('heroOverduePill');
 
-  if (heroTodayPill) heroTodayPill.innerHTML = `<i class="fa-solid fa-sun"></i> Today: <strong>${stats.today.total}</strong>`;
-  if (heroWeekPill) heroWeekPill.innerHTML = `<i class="fa-solid fa-calendar-week"></i> This Week: <strong>${stats.week.total}</strong>`;
-  if (heroMonthPill) heroMonthPill.innerHTML = `<i class="fa-solid fa-calendar-days"></i> This Month: <strong>${stats.month.total}</strong>`;
-  if (heroOverduePill) heroOverduePill.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Overdue: <strong>${stats.overdue}</strong>`;
+  if (heroTodayPill) heroTodayPill.innerHTML = `<i class="fa-solid fa-sun"></i> Today: <strong>${activeStats.today.total}</strong>`;
+  if (heroWeekPill) heroWeekPill.innerHTML = `<i class="fa-solid fa-calendar-week"></i> This Week: <strong>${activeStats.week.total}</strong>`;
+  if (heroMonthPill) heroMonthPill.innerHTML = `<i class="fa-solid fa-calendar-days"></i> This Month: <strong>${activeStats.month.total}</strong>`;
+  if (heroOverduePill) heroOverduePill.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i> Overdue: <strong>${activeStats.overdue}</strong>`;
 
   // Overdue Callout Banner
   const overdueBanner = document.getElementById('overdueCalloutBanner');
   if (overdueBanner) {
-    if (stats.overdue > 0) {
+    if (activeStats.overdue > 0) {
       overdueBanner.style.display = 'flex';
-      setElementText('overdueCalloutTitle', `Attention: ${stats.overdue} Overdue Activities Detected`);
-      setElementText('overdueCalloutDesc', `You have ${stats.overdue} activities past due. Reschedule them to Today with one click or review them.`);
+      setElementText('overdueCalloutTitle', `Attention: ${activeStats.overdue} Overdue Activities Detected`);
+      setElementText('overdueCalloutDesc', `You have ${activeStats.overdue} activities past due. Reschedule them to Today with one click or review them.`);
     } else {
       overdueBanner.style.display = 'none';
     }
@@ -1104,26 +1317,26 @@ function updateDashboardUI() {
   updateDateSubtitles();
 
   // Metric Cards
-  setElementText('statTodayTotal', stats.today.total);
-  setElementText('statTodayPending', `${stats.today.pending} still not done`);
-  setElementText('statTodayDone', `${stats.today.done} done`);
-  const todayFill = stats.today.total > 0 ? (stats.today.done / stats.today.total) * 100 : 0;
+  setElementText('statTodayTotal', activeStats.today.total);
+  setElementText('statTodayPending', `${activeStats.today.pending} still not done`);
+  setElementText('statTodayDone', `${activeStats.today.done} done`);
+  const todayFill = activeStats.today.total > 0 ? (activeStats.today.done / activeStats.today.total) * 100 : 0;
   setElementWidth('barTodayProgress', `${todayFill}%`);
 
-  setElementText('statWeekTotal', stats.week.total);
-  setElementText('statWeekPending', `${stats.week.pending} still not done`);
-  setElementText('statWeekDone', `${stats.week.done} done`);
-  const weekFill = stats.week.total > 0 ? (stats.week.done / stats.week.total) * 100 : 0;
+  setElementText('statWeekTotal', activeStats.week.total);
+  setElementText('statWeekPending', `${activeStats.week.pending} still not done`);
+  setElementText('statWeekDone', `${activeStats.week.done} done`);
+  const weekFill = activeStats.week.total > 0 ? (activeStats.week.done / activeStats.week.total) * 100 : 0;
   setElementWidth('barWeekProgress', `${weekFill}%`);
 
-  setElementText('statMonthTotal', stats.month.total);
-  setElementText('statMonthPending', `${stats.month.pending} still not done`);
-  setElementText('statMonthDone', `${stats.month.done} done`);
-  const monthFill = stats.month.total > 0 ? (stats.month.done / stats.month.total) * 100 : 0;
+  setElementText('statMonthTotal', activeStats.month.total);
+  setElementText('statMonthPending', `${activeStats.month.pending} still not done`);
+  setElementText('statMonthDone', `${activeStats.month.done} done`);
+  const monthFill = activeStats.month.total > 0 ? (activeStats.month.done / activeStats.month.total) * 100 : 0;
   setElementWidth('barMonthProgress', `${monthFill}%`);
 
-  setElementText('statOverdueTotal', stats.overdue);
-  setElementText('statOverdueAdvice', stats.overdue > 0 ? 'Requires immediate attention' : 'Zero overdue items 👍');
+  setElementText('statOverdueTotal', activeStats.overdue);
+  setElementText('statOverdueAdvice', activeStats.overdue > 0 ? 'Requires immediate attention' : 'Zero overdue items 👍');
 
   // Today's Focus List
   renderDashboardFocusList();
@@ -1174,7 +1387,14 @@ function renderDashboardFocusList() {
   const container = document.getElementById('dashboardFocusList');
   if (!container) return;
 
-  const todayTasks = state.tasks.filter(isTaskToday);
+  const isAdmin = state.currentUser && state.currentUser.roleType === 'admin';
+  const isMyScope = !isAdmin && state.filters.userScope === 'my';
+  const currentUserId = state.currentUser ? state.currentUser.id : 'user-alex';
+
+  let todayTasks = state.tasks.filter(isTaskToday);
+  if (isMyScope) {
+    todayTasks = todayTasks.filter(t => t.assigneeId === currentUserId);
+  }
 
   if (todayTasks.length === 0) {
     container.innerHTML = `
@@ -1195,9 +1415,13 @@ function renderDashboardFocusList() {
             <input type="checkbox" class="task-checkbox" data-id="${task.id}" ${isCompleted ? 'checked' : ''} title="Toggle completed">
             <div style="min-width: 0;">
               <span class="task-title" style="font-size: 0.94rem; ${isCompleted ? 'text-decoration: line-through; color: var(--text-subtle);' : ''}">${escapeHtml(task.title)}</span>
-              <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px;">
+              <div style="display: flex; gap: 6px; align-items: center; margin-top: 4px; flex-wrap: wrap;">
                 <span class="badge ${getPriorityBadgeClass(task.priority)}">${capitalize(task.priority)}</span>
                 <span class="badge badge-scope">${escapeHtml(task.category || 'General')}</span>
+                <span class="assignee-tag-sm" title="Assigned to ${escapeHtml(task.assigneeName || 'Team Member')}">
+                  <span class="avatar-micro ${task.assigneeAvatarClass || 'bg-indigo'}">${task.assigneeAvatar || 'U'}</span>
+                  <span>${escapeHtml(task.assigneeName ? task.assigneeName.split(' ')[0] : 'Assignee')}</span>
+                </span>
                 ${task.dueTime ? `<span style="font-size: 0.74rem; color: var(--text-muted);"><i class="fa-regular fa-clock"></i> ${formatTime(task.dueTime)}</span>` : ''}
               </div>
             </div>
@@ -1217,9 +1441,13 @@ function renderDashboardFocusList() {
 function renderCharts(stats) {
   if (typeof Chart === 'undefined') return;
 
-  const isDark = document.body.getAttribute('data-theme') === 'dark';
+  const isDark = document.body && document.body.getAttribute('data-theme') === 'dark';
   const textColor = isDark ? '#94a3b8' : '#475569';
   const gridColor = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)';
+
+  const isAdmin = state.currentUser && state.currentUser.roleType === 'admin';
+  const isMyScope = !isAdmin && state.filters.userScope === 'my';
+  const activeStats = isMyScope ? stats.my : stats;
 
   // Chart 1: Status Distribution Doughnut
   const statusCtx = document.getElementById('statusChart');
@@ -1237,7 +1465,7 @@ function renderCharts(stats) {
       data: {
         labels: ['Completed', 'Still Not Done', 'Overdue'],
         datasets: [{
-          data: [stats.completed, stats.stillNotDone, stats.overdue],
+          data: [activeStats.completed, activeStats.stillNotDone, activeStats.overdue],
           backgroundColor: statusPastelColors,
           borderWidth: 0,
           hoverOffset: 6
@@ -1260,7 +1488,7 @@ function renderCharts(stats) {
             callbacks: {
               label: function (context) {
                 const val = context.raw || 0;
-                const total = stats.total || 1;
+                const total = activeStats.total || 1;
                 const pct = Math.round((val / total) * 100);
                 return ` ${context.label}: ${val} (${pct}%)`;
               }
@@ -1277,43 +1505,86 @@ function renderCharts(stats) {
         ? { done: '#6ee7b7', pending: '#fcd34d', overdue: '#fda4af' }
         : { done: '#34d399', pending: '#fbbf24', overdue: '#f87171' };
       legendEl.innerHTML = `
-        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.done};"></span> Done (${stats.completed})</span>
-        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.pending};"></span> Pending (${stats.stillNotDone})</span>
-        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.overdue};"></span> Overdue (${stats.overdue})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.done};"></span> Done (${activeStats.completed})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.pending};"></span> Pending (${activeStats.stillNotDone})</span>
+        <span class="legend-item"><span class="legend-dot" style="background:${dotColors.overdue};"></span> Overdue (${activeStats.overdue})</span>
       `;
     }
   }
 
-  // Chart 2: Time Horizon Breakdown (Bar Chart)
+  // Chart 2: Time Horizon Breakdown (or Team Workload for Admin)
   const horizonCtx = document.getElementById('horizonChart');
   if (horizonCtx) {
     if (state.charts.horizon) {
       state.charts.horizon.destroy();
     }
 
-    const horizonPendingPastel = isDark
-      ? ['#fcd34d', '#93c5fd', '#5eead4']
-      : ['#fbbf24', '#818cf8', '#2dd4bf'];
-    const horizonDonePastel = isDark ? '#6ee7b7' : '#34d399';
+    let chartLabels = [];
+    let datasets = [];
+
+    const chart2Title = horizonCtx.closest('.chart-card')?.querySelector('.card-title');
+    const chart2Subtitle = horizonCtx.closest('.chart-card')?.querySelector('.card-subtitle');
+
+    if (isAdmin && stats.memberStats && stats.memberStats.length > 0) {
+      if (chart2Title) chart2Title.innerHTML = '<i class="fa-solid fa-users text-teal"></i> Team Workload & Health';
+      if (chart2Subtitle) chart2Subtitle.textContent = 'Activity volume & overdue distribution across members';
+
+      chartLabels = stats.memberStats.map(m => m.name.split(' ')[0]);
+      datasets = [
+        {
+          label: 'Completed',
+          data: stats.memberStats.map(m => m.completed),
+          backgroundColor: isDark ? '#6ee7b7' : '#34d399',
+          borderRadius: 6
+        },
+        {
+          label: 'Still Not Done',
+          data: stats.memberStats.map(m => m.pending),
+          backgroundColor: isDark ? '#93c5fd' : '#818cf8',
+          borderRadius: 6
+        },
+        {
+          label: 'Overdue',
+          data: stats.memberStats.map(m => m.overdue),
+          backgroundColor: isDark ? '#fda4af' : '#f87171',
+          borderRadius: 6
+        }
+      ];
+    } else {
+      if (chart2Title) chart2Title.innerHTML = '<i class="fa-solid fa-chart-column text-teal"></i> Time Horizon Workload';
+      if (chart2Subtitle) {
+        chart2Subtitle.textContent = isMyScope 
+          ? 'Your personal activity volume across horizons' 
+          : 'Team activity volume across Today, Week & Month';
+      }
+
+      chartLabels = ['Today', 'This Week', 'This Month'];
+      const horizonPendingPastel = isDark
+        ? ['#fcd34d', '#93c5fd', '#5eead4']
+        : ['#fbbf24', '#818cf8', '#2dd4bf'];
+      const horizonDonePastel = isDark ? '#6ee7b7' : '#34d399';
+
+      datasets = [
+        {
+          label: 'Still Not Done',
+          data: [activeStats.today.pending, activeStats.week.pending, activeStats.month.pending],
+          backgroundColor: horizonPendingPastel,
+          borderRadius: 6
+        },
+        {
+          label: 'Completed',
+          data: [activeStats.today.done, activeStats.week.done, activeStats.month.done],
+          backgroundColor: horizonDonePastel,
+          borderRadius: 6
+        }
+      ];
+    }
 
     state.charts.horizon = new Chart(horizonCtx, {
       type: 'bar',
       data: {
-        labels: ['Today', 'This Week', 'This Month'],
-        datasets: [
-          {
-            label: 'Still Not Done',
-            data: [stats.today.pending, stats.week.pending, stats.month.pending],
-            backgroundColor: horizonPendingPastel,
-            borderRadius: 6
-          },
-          {
-            label: 'Completed',
-            data: [stats.today.done, stats.week.done, stats.month.done],
-            backgroundColor: horizonDonePastel,
-            borderRadius: 6
-          }
-        ]
+        labels: chartLabels,
+        datasets: datasets
       },
       options: {
         responsive: true,
@@ -1511,6 +1782,10 @@ function renderGridView(container, tasks) {
               <span class="badge ${horizonMeta.badgeClass}">${horizonMeta.label}</span>
               <span class="badge ${getPriorityBadgeClass(task.priority)}">${capitalize(task.priority)}</span>
               <span class="badge ${statusClass}">${statusLabel}</span>
+              <span class="assignee-tag-sm" title="Assigned to ${escapeHtml(task.assigneeName || 'Team Member')}">
+                <span class="avatar-micro ${task.assigneeAvatarClass || 'bg-indigo'}">${task.assigneeAvatar || 'U'}</span>
+                <span>${escapeHtml(task.assigneeName ? task.assigneeName.split(' ')[0] : 'Assignee')}</span>
+              </span>
             </div>
           </div>
         </div>
@@ -1550,6 +1825,7 @@ function renderTableView(container, tasks) {
         <tr>
           <th style="width: 44px;"></th>
           <th>Activity Title & Description</th>
+          <th style="width: 140px;">Assignee</th>
           <th>Horizon</th>
           <th>Due Date</th>
           <th>Priority</th>
@@ -1579,6 +1855,12 @@ function renderTableView(container, tasks) {
               <td>
                 <span class="task-title" style="${isCompleted ? 'text-decoration: line-through; color: var(--text-subtle);' : ''}">${escapeHtml(task.title)}</span>
                 ${task.description ? `<br><small style="color:var(--text-muted); font-size:0.78rem;">${escapeHtml(task.description)}</small>` : ''}
+              </td>
+              <td>
+                <span class="assignee-tag">
+                  <span class="avatar-micro ${task.assigneeAvatarClass || 'bg-indigo'}">${task.assigneeAvatar || 'U'}</span>
+                  <span>${escapeHtml(task.assigneeName || 'Assigned')}</span>
+                </span>
               </td>
               <td><span class="badge ${horizonMeta.badgeClass}">${horizonMeta.label}</span></td>
               <td class="${isOverdue ? 'text-rose font-semibold' : ''}">
@@ -1779,6 +2061,12 @@ function openAddModal(defaultScope = null, specificDate = null) {
   document.getElementById('taskCategorySelect').value = 'Work';
   document.getElementById('taskStatusSelect').value = 'pending';
 
+  const assigneeSelect = document.getElementById('taskAssigneeSelect');
+  if (assigneeSelect) {
+    const defaultAssignee = state.currentUser ? (state.currentUser.id === 'user-admin' ? 'user-alex' : state.currentUser.id) : 'user-alex';
+    assigneeSelect.value = defaultAssignee;
+  }
+
   updateCalculatedScopeHint(defaultDate);
 
   modal.classList.add('open');
@@ -1807,6 +2095,11 @@ function openEditModal(taskId) {
   document.getElementById('taskCategorySelect').value = task.category || 'Work';
   document.getElementById('taskStatusSelect').value = task.status === 'completed' ? 'completed' : 'pending';
 
+  const assigneeSelect = document.getElementById('taskAssigneeSelect');
+  if (assigneeSelect) {
+    assigneeSelect.value = task.assigneeId || 'user-alex';
+  }
+
   updateCalculatedScopeHint(task.dueDate);
 
   modal.classList.add('open');
@@ -1831,6 +2124,14 @@ function handleSaveTaskForm(e) {
   const priority = document.getElementById('taskPrioritySelect').value;
   const category = document.getElementById('taskCategorySelect').value;
   const status = document.getElementById('taskStatusSelect').value;
+  const assigneeId = document.getElementById('taskAssigneeSelect')?.value || 'user-alex';
+
+  const assigneeInfo = Object.values(DEMO_USERS).find(u => u.id === assigneeId) || {
+    id: assigneeId,
+    name: 'Alex Morgan',
+    initials: 'AM',
+    avatarClass: 'bg-indigo'
+  };
 
   if (!title) {
     showToast('Please enter an activity title.', 'warning');
@@ -1849,6 +2150,10 @@ function handleSaveTaskForm(e) {
         priority,
         category,
         status,
+        assigneeId: assigneeInfo.id,
+        assigneeName: assigneeInfo.name,
+        assigneeAvatar: assigneeInfo.initials,
+        assigneeAvatarClass: assigneeInfo.avatarClass,
         updatedAt: new Date().toISOString()
       };
       showToast('Activity successfully updated!', 'success');
@@ -1863,6 +2168,10 @@ function handleSaveTaskForm(e) {
       priority,
       category,
       status,
+      assigneeId: assigneeInfo.id,
+      assigneeName: assigneeInfo.name,
+      assigneeAvatar: assigneeInfo.initials,
+      assigneeAvatarClass: assigneeInfo.avatarClass,
       createdAt: new Date().toISOString()
     };
     state.tasks.unshift(newTask);
@@ -2212,11 +2521,27 @@ function initUserSession() {
     console.error('Failed to parse user session:', err);
     state.currentUser = DEMO_USERS.alex;
   }
+  // Setup default scopes based on roleType
+  if (state.currentUser && state.currentUser.roleType === 'admin') {
+    state.filters.userScope = 'all';
+    state.filters.selectedMember = 'all';
+  } else {
+    state.filters.userScope = 'my';
+    state.filters.selectedMember = 'all';
+  }
   updateUserUI();
 }
 
 function setUserSession(user, persist = true) {
   state.currentUser = user;
+  if (user && user.roleType === 'admin') {
+    state.filters.userScope = 'all';
+    state.filters.selectedMember = 'all';
+  } else {
+    state.filters.userScope = 'my';
+    state.filters.selectedMember = 'all';
+  }
+
   if (persist && user) {
     try {
       localStorage.setItem(USER_SESSION_KEY, JSON.stringify(user));
@@ -2226,8 +2551,17 @@ function setUserSession(user, persist = true) {
   } else if (!user) {
     localStorage.removeItem(USER_SESSION_KEY);
   }
+
+  // Synchronize member select dropdowns
+  const adminMemberSelect = document.getElementById('adminMemberSelect');
+  if (adminMemberSelect) adminMemberSelect.value = state.filters.selectedMember;
+  const filterMemberSelect = document.getElementById('filterMemberSelect');
+  if (filterMemberSelect) filterMemberSelect.value = state.filters.selectedMember;
+
   updateUserUI();
   updateDashboardUI();
+  renderTasksList();
+  renderCalendar();
 }
 
 function updateUserUI() {
@@ -2235,12 +2569,14 @@ function updateUserUI() {
     name: 'Guest User',
     role: 'Guest Access',
     email: 'guest@horizon.app',
+    roleType: 'user',
     initials: 'GU',
     avatarClass: 'bg-gray'
   };
 
   const avatarClass = user.avatarClass || 'bg-indigo';
   const initials = user.initials || getInitials(user.name);
+  const isAdmin = user.roleType === 'admin';
 
   // 1. Top Navbar
   const navAvatar = document.getElementById('navAvatar');
@@ -2252,6 +2588,29 @@ function updateUserUI() {
   }
   if (navUserName) navUserName.textContent = user.name;
   if (navUserRole) navUserRole.textContent = user.role;
+
+  // Status Badge in Navbar
+  const statusBadge = document.getElementById('systemStatusBadge');
+  if (statusBadge) {
+    if (isAdmin) {
+      statusBadge.innerHTML = '<span class="status-indicator" style="background:#f43f5e;"></span> 👑 Administrator';
+      statusBadge.classList.add('pill-admin');
+    } else {
+      statusBadge.innerHTML = '<span class="status-indicator" style="background:#10b981;"></span> 👤 Team Member';
+      statusBadge.classList.remove('pill-admin');
+    }
+  }
+
+  // Navigation Items Dynamic Names & Icons
+  const navDashboardText = document.getElementById('navDashboardText');
+  const navDashboardIcon = document.getElementById('navDashboardIcon');
+  const navTasksText = document.getElementById('navTasksText');
+
+  if (navDashboardText) navDashboardText.textContent = isAdmin ? 'Admin Dashboard' : 'User Dashboard';
+  if (navDashboardIcon) {
+    navDashboardIcon.className = isAdmin ? 'fa-solid fa-chart-pie' : 'fa-solid fa-compass';
+  }
+  if (navTasksText) navTasksText.textContent = isAdmin ? 'All Team Activities' : 'My Activities';
 
   // 2. Sidebar Footer Card
   const sidebarAvatar = document.getElementById('sidebarAvatar');
@@ -2301,6 +2660,7 @@ function openAuthModal(mode = 'signin') {
   const tabSignUp = document.getElementById('tabSignUpBtn');
   const nameGroup = document.getElementById('authNameGroup');
   const roleGroup = document.getElementById('authRoleGroup');
+  const accountTypeGroup = document.getElementById('authAccountTypeGroup');
   const submitText = document.getElementById('submitAuthBtnText');
 
   if (mode === 'signup') {
@@ -2310,6 +2670,7 @@ function openAuthModal(mode = 'signin') {
     if (subtitleEl) subtitleEl.textContent = 'Set up your executive profile and personalize your workspace';
     if (nameGroup) nameGroup.style.display = 'block';
     if (roleGroup) roleGroup.style.display = 'block';
+    if (accountTypeGroup) accountTypeGroup.style.display = 'block';
     if (submitText) submitText.textContent = 'Create Account';
     setTimeout(() => document.getElementById('authNameInput')?.focus(), 100);
   } else {
@@ -2319,6 +2680,7 @@ function openAuthModal(mode = 'signin') {
     if (subtitleEl) subtitleEl.textContent = 'Sign in to sync activities and personalize your horizon workspace';
     if (nameGroup) nameGroup.style.display = 'none';
     if (roleGroup) roleGroup.style.display = 'none';
+    if (accountTypeGroup) accountTypeGroup.style.display = 'none';
     if (submitText) submitText.textContent = 'Sign In';
     setTimeout(() => document.getElementById('authEmailInput')?.focus(), 100);
   }
@@ -2360,24 +2722,26 @@ function handleAuthFormSubmit(e) {
 
   if (state.authMode === 'signup') {
     const name = document.getElementById('authNameInput')?.value.trim() || 'New User';
-    const role = document.getElementById('authRoleInput')?.value.trim() || 'Team Member';
+    const accountType = document.getElementById('authAccountTypeSelect')?.value || 'user';
+    const defaultRole = accountType === 'admin' ? 'Organization Administrator' : 'Team Member';
+    const role = document.getElementById('authRoleInput')?.value.trim() || defaultRole;
     const initials = getInitials(name);
-    const avatarGradients = ['bg-indigo', 'bg-teal', 'bg-amber'];
-    const randomAvatar = avatarGradients[Math.floor(Math.random() * avatarGradients.length)];
+    const avatarClass = accountType === 'admin' ? 'bg-rose' : 'bg-indigo';
 
     const newUser = {
       id: `user-${Date.now()}`,
       name,
       role,
       email,
+      roleType: accountType,
       initials,
-      avatarClass: randomAvatar
+      avatarClass
     };
 
     setUserSession(newUser, remember);
     closeAuthModal();
     triggerCelebration();
-    showToast(`Welcome aboard, ${name}! Your account is active. 🎉`, 'success');
+    showToast(`Welcome aboard, ${name}! Your ${accountType === 'admin' ? 'Admin' : 'User'} account is active. 🎉`, 'success');
   } else {
     // Check if matches one of demo users
     const matchedDemo = Object.values(DEMO_USERS).find(u => u.email.toLowerCase() === email.toLowerCase());
@@ -2386,7 +2750,7 @@ function handleAuthFormSubmit(e) {
       closeAuthModal();
       showToast(`Welcome back, ${matchedDemo.name}! 👋`, 'success');
     } else {
-      // Derive nice name from email
+      // Derive role & name from email
       const emailPrefix = email.split('@')[0];
       const derivedName = emailPrefix
         .replace(/[._-]/g, ' ')
@@ -2394,13 +2758,15 @@ function handleAuthFormSubmit(e) {
         .map(s => s.charAt(0).toUpperCase() + s.slice(1))
         .join(' ') || 'User';
 
+      const isAdminEmail = email.toLowerCase().includes('admin');
       const customUser = {
         id: `user-${Date.now()}`,
         name: derivedName,
-        role: 'Executive Member',
+        role: isAdminEmail ? 'Organization Administrator' : 'Executive Member',
         email,
+        roleType: isAdminEmail ? 'admin' : 'user',
         initials: getInitials(derivedName),
-        avatarClass: 'bg-indigo'
+        avatarClass: isAdminEmail ? 'bg-rose' : 'bg-indigo'
       };
 
       setUserSession(customUser, remember);
@@ -2427,12 +2793,81 @@ function handleSignOut() {
     name: 'Guest User',
     role: 'Guest Access',
     email: 'guest@horizon.app',
+    roleType: 'user',
     initials: 'GU',
     avatarClass: 'bg-gray'
   };
   setUserSession(guestUser, false);
   localStorage.removeItem(USER_SESSION_KEY);
   showToast('Signed out. You are now browsing as Guest.', 'info');
+}
+
+// Admin Team Functions
+function exportTeamAuditReport() {
+  const stats = calculateStats();
+  const overdueTasks = state.tasks.filter(isTaskOverdue);
+  const auditData = {
+    exportedAt: new Date().toISOString(),
+    organization: 'TaskHorizon Executive Workspace',
+    administrator: state.currentUser ? state.currentUser.name : 'Eleanor Vance',
+    adminEmail: state.currentUser ? state.currentUser.email : 'admin@horizon.app',
+    overallMetrics: {
+      totalActivities: stats.total,
+      completedActivities: stats.completed,
+      pendingActivities: stats.stillNotDone,
+      overdueActivities: stats.overdue,
+      orgVelocity: `${stats.percent}%`
+    },
+    teamWorkloadBreakdown: stats.memberStats.map(m => ({
+      memberId: m.id,
+      name: m.name,
+      role: m.role,
+      email: m.email,
+      totalAssigned: m.total,
+      completed: m.completed,
+      pending: m.pending,
+      overdue: m.overdue,
+      completionRate: `${m.percent}%`,
+      status: m.overdue > 0 ? 'Action Needed' : 'On Track'
+    })),
+    escalatedOverdueActivities: overdueTasks.map(t => ({
+      id: t.id,
+      title: t.title,
+      assigneeName: t.assigneeName,
+      dueDate: t.dueDate,
+      priority: t.priority,
+      category: t.category
+    }))
+  };
+
+  const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(auditData, null, 2));
+  const downloadAnchor = document.createElement('a');
+  downloadAnchor.setAttribute('href', dataStr);
+  downloadAnchor.setAttribute('download', `taskhorizon-team-audit-${formatDateToYYYYMMDD(new Date())}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
+  showToast('Team Audit Report exported successfully! 📋', 'success');
+}
+
+function rescheduleMemberOverdueToToday(memberId) {
+  const overdueTasks = state.tasks.filter(t => isTaskOverdue(t) && t.assigneeId === memberId);
+  if (overdueTasks.length === 0) {
+    showToast('No overdue activities for this team member 👍', 'info');
+    return;
+  }
+
+  const todayStr = getTodayDateString();
+  const memberName = overdueTasks[0].assigneeName || 'Member';
+  overdueTasks.forEach(t => {
+    t.dueDate = todayStr;
+    t.status = 'pending';
+  });
+
+  saveTasks();
+  refreshAllViews();
+  triggerCelebration();
+  showToast(`Rescheduled ${overdueTasks.length} overdue tasks for ${memberName} to Today! ☀️`, 'success');
 }
 
 // ==========================================================================
@@ -2529,6 +2964,54 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initial UI Render
   updateDashboardUI();
   renderTasksList();
+
+  // User Scope Toggles (Dashboard & Tasks View)
+  document.querySelectorAll('[data-user-scope]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const scope = btn.getAttribute('data-user-scope');
+      if (scope) {
+        state.filters.userScope = scope;
+        document.querySelectorAll('[data-user-scope]').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-user-scope') === scope);
+        });
+        updateDashboardUI();
+        renderTasksList();
+      }
+    });
+  });
+
+  // Admin & Team Member Filter Selects
+  const adminMemberSelect = document.getElementById('adminMemberSelect');
+  if (adminMemberSelect) {
+    adminMemberSelect.addEventListener('change', (e) => {
+      state.filters.selectedMember = e.target.value;
+      const filterMemberSelect = document.getElementById('filterMemberSelect');
+      if (filterMemberSelect) filterMemberSelect.value = e.target.value;
+      renderTasksList();
+      updateDashboardUI();
+    });
+  }
+
+  const filterMemberSelect = document.getElementById('filterMemberSelect');
+  if (filterMemberSelect) {
+    filterMemberSelect.addEventListener('change', (e) => {
+      state.filters.selectedMember = e.target.value;
+      if (adminMemberSelect) adminMemberSelect.value = e.target.value;
+      renderTasksList();
+      updateDashboardUI();
+    });
+  }
+
+  // Admin Command Action Buttons
+  document.getElementById('adminRebalanceBtn')?.addEventListener('click', () => {
+    if (state.filters.selectedMember && state.filters.selectedMember !== 'all') {
+      rescheduleMemberOverdueToToday(state.filters.selectedMember);
+    } else {
+      rescheduleAllOverdueToToday();
+    }
+  });
+
+  document.getElementById('adminExportAuditBtn')?.addEventListener('click', exportTeamAuditReport);
 
   // Navigation View Switchers
   document.querySelectorAll('.sidebar-nav .nav-btn[data-view]').forEach(btn => {
@@ -2749,6 +3232,32 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rescheduleBtn) {
       const taskId = rescheduleBtn.getAttribute('data-reschedule-id');
       if (taskId) rescheduleTaskToToday(taskId);
+      return;
+    }
+
+    // Member card inspect activities button
+    const inspectBtn = e.target.closest('.btn-inspect-member');
+    if (inspectBtn) {
+      const memberId = inspectBtn.getAttribute('data-member-id');
+      if (memberId) {
+        state.filters.selectedMember = memberId;
+        const adminMemberSelect = document.getElementById('adminMemberSelect');
+        const filterMemberSelect = document.getElementById('filterMemberSelect');
+        if (adminMemberSelect) adminMemberSelect.value = memberId;
+        if (filterMemberSelect) filterMemberSelect.value = memberId;
+        switchView('all-tasks');
+        renderTasksList();
+      }
+      return;
+    }
+
+    // Member overdue reschedule button
+    const memberRescheduleBtn = e.target.closest('.btn-member-reschedule');
+    if (memberRescheduleBtn) {
+      const memberId = memberRescheduleBtn.getAttribute('data-member-reschedule');
+      if (memberId) {
+        rescheduleMemberOverdueToToday(memberId);
+      }
       return;
     }
 

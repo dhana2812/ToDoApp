@@ -2678,6 +2678,367 @@ input:checked + .slider:before {
 }
 
 /* ==========================================================================
+   Admin & Individual User Dashboard Modules
+   ========================================================================== */
+.admin-command-section {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-command-section::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #f43f5e, #ec4899, #f59e0b, #6366f1);
+}
+
+.admin-header-flex {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-pill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  background: rgba(244, 63, 94, 0.1);
+  color: var(--status-overdue);
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.admin-section-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -0.02em;
+  margin-top: 4px;
+}
+
+.admin-section-subtitle {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.admin-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.team-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.team-member-card {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: all var(--transition-fast);
+}
+
+.team-member-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+.member-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.member-info h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.member-role {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  display: block;
+}
+
+.member-email {
+  font-size: 0.7rem;
+  color: var(--text-subtle);
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.member-health-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+}
+
+.badge-emerald {
+  background: var(--status-completed-soft);
+  color: var(--status-completed);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.member-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.stat-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-num {
+  font-size: 0.95rem;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-lbl {
+  font-size: 0.62rem;
+  color: var(--text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.member-progress-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.member-progress-bar {
+  flex: 1;
+  height: 6px;
+  background: var(--bg-surface);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.member-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1, #2dd4bf);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.member-progress-pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.member-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+/* User Scope Banner */
+.user-scope-banner {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-xs);
+  flex-wrap: wrap;
+}
+
+.user-scope-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-scope-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.user-scope-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: block;
+}
+
+.user-scope-sub {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.user-scope-btns {
+  display: inline-flex;
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px;
+  gap: 2px;
+}
+
+.scope-toggle-btn {
+  padding: 6px 14px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all var(--transition-fast);
+}
+
+.scope-toggle-btn:hover {
+  color: var(--text-main);
+}
+
+.scope-toggle-btn.active {
+  background: var(--bg-surface);
+  color: var(--color-primary);
+  font-weight: 700;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Tasks User Scope Bar */
+.tasks-user-scope-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tasks-scope-hint {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+}
+
+/* Assignee Badges & Avatars */
+.assignee-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.assignee-tag-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-surface-elevated);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.avatar-micro {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.58rem;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.quick-demo-pill.pill-admin {
+  background: rgba(244, 63, 94, 0.08);
+  border-color: rgba(244, 63, 94, 0.25);
+  color: var(--status-overdue);
+  font-weight: 700;
+}
+
+.quick-demo-pill.pill-admin:hover {
+  background: rgba(244, 63, 94, 0.15);
+  border-color: var(--status-overdue);
+}
+
+/* ==========================================================================
    Responsive Breakpoints & Print Styles
    ========================================================================== */
 @media (max-width: 1180px) {

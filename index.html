@@ -37,13 +37,13 @@
 
       <div class="sidebar-nav">
         <div class="nav-section-title">Navigation</div>
-        <button class="nav-btn active" data-view="dashboard">
-          <i class="fa-solid fa-chart-pie"></i>
-          <span>Visual Dashboard</span>
+        <button class="nav-btn active" data-view="dashboard" id="navBtnDashboard">
+          <i class="fa-solid fa-chart-pie" id="navDashboardIcon"></i>
+          <span id="navDashboardText">Visual Dashboard</span>
         </button>
-        <button class="nav-btn" data-view="all-tasks">
+        <button class="nav-btn" data-view="all-tasks" id="navBtnAllTasks">
           <i class="fa-solid fa-list-check"></i>
-          <span>All Activities</span>
+          <span id="navTasksText">All Activities</span>
           <span class="badge-count" id="countAll">0</span>
         </button>
         <button class="nav-btn" data-view="calendar">
@@ -210,7 +210,16 @@
                 </div>
               </div>
               <div class="dropdown-divider"></div>
-              <div class="dropdown-section-title">Switch Demo Account</div>
+              <div class="dropdown-section-title">Administrator Account</div>
+              <button type="button" class="dropdown-item demo-user-btn" data-user-profile="admin">
+                <span class="demo-avatar bg-rose">EV</span>
+                <div class="demo-user-meta">
+                  <span style="font-weight:700; color:var(--status-overdue);">👑 Eleanor Vance</span>
+                  <small>COO & System Admin</small>
+                </div>
+              </button>
+              <div class="dropdown-divider"></div>
+              <div class="dropdown-section-title">Individual Team Members</div>
               <button type="button" class="dropdown-item demo-user-btn" data-user-profile="alex">
                 <span class="demo-avatar bg-indigo">AM</span>
                 <div class="demo-user-meta">
@@ -269,6 +278,61 @@
 
       <!-- Dashboard View Container -->
       <section class="content-section" id="dashboardView">
+        <!-- Admin Command Center Panel (Displayed when logged in as Admin) -->
+        <div class="admin-command-section" id="adminCommandSection" style="display: none;">
+          <div class="admin-header-flex">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span class="admin-pill-tag"><i class="fa-solid fa-crown text-amber"></i> Admin Command Center</span>
+                <span class="badge badge-rose" id="adminOverdueAlertBadge">⚠️ 7 Team Overdue</span>
+              </div>
+              <h3 class="admin-section-title">Organization & Team Workload Intelligence</h3>
+              <p class="admin-section-subtitle">Real-time team oversight, workload distribution, and overdue escalation across all members</p>
+            </div>
+            <div class="admin-quick-actions">
+              <div class="select-group">
+                <label for="adminMemberSelect"><i class="fa-solid fa-user-tag text-indigo"></i> Member:</label>
+                <select id="adminMemberSelect" class="form-select-sm">
+                  <option value="all">👥 All Team Members (55 Tasks)</option>
+                  <option value="user-alex">🟣 Alex Morgan (19 Tasks)</option>
+                  <option value="user-sarah">🟢 Sarah Chen (18 Tasks)</option>
+                  <option value="user-david">🟡 David Kumar (18 Tasks)</option>
+                </select>
+              </div>
+              <button class="btn-subtle" id="adminExportAuditBtn" title="Export team audit report">
+                <i class="fa-solid fa-file-invoice"></i> Audit Report
+              </button>
+              <button class="btn-alert-reschedule" id="adminRebalanceBtn" title="Reschedule all team overdue tasks to today">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Rebalance Overdue
+              </button>
+            </div>
+          </div>
+
+          <!-- Team Member Workload Cards Grid -->
+          <div class="team-cards-grid" id="teamCardsGrid">
+            <!-- Rendered dynamically by JS -->
+          </div>
+        </div>
+
+        <!-- User Scope Toggle Bar (Displayed for Individual Users) -->
+        <div class="user-scope-banner" id="userScopeBanner" style="display: none;">
+          <div class="user-scope-indicator">
+            <span class="user-scope-avatar bg-indigo" id="userScopeAvatar">AM</span>
+            <div>
+              <span class="user-scope-title" id="userScopeTitle">Personal Horizon Workspace</span>
+              <p class="user-scope-sub" id="userScopeSubtitle">Showing activities assigned to you</p>
+            </div>
+          </div>
+          <div class="user-scope-btns">
+            <button type="button" class="scope-toggle-btn active" id="btnScopeMy" data-user-scope="my">
+              <i class="fa-solid fa-user"></i> My Activities (<span id="scopeMyCount">0</span>)
+            </button>
+            <button type="button" class="scope-toggle-btn" id="btnScopeAll" data-user-scope="all">
+              <i class="fa-solid fa-globe"></i> Team Shared (<span id="scopeAllCount">55</span>)
+            </button>
+          </div>
+        </div>
+
         <!-- Hero Horizon Banner -->
         <div class="dashboard-hero-card">
           <div class="hero-left">
@@ -455,6 +519,19 @@
 
       <!-- All Activities / Tasks View Container -->
       <section class="content-section" id="tasksView" style="display: none;">
+        <!-- User Scope Toggle Bar in Tasks View -->
+        <div class="tasks-user-scope-row" id="tasksUserScopeRow">
+          <div class="user-scope-btns">
+            <button type="button" class="scope-toggle-btn active" id="btnTasksScopeMy" data-user-scope="my">
+              <i class="fa-solid fa-user"></i> My Activities (<span id="tasksScopeMyCount">0</span>)
+            </button>
+            <button type="button" class="scope-toggle-btn" id="btnTasksScopeAll" data-user-scope="all">
+              <i class="fa-solid fa-globe"></i> Team Shared (<span id="tasksScopeAllCount">55</span>)
+            </button>
+          </div>
+          <span class="tasks-scope-hint" id="tasksScopeHint">Showing only your assigned activities</span>
+        </div>
+
         <!-- Control Bar: Scope tabs, Filters, Sort, View mode -->
         <div class="task-controls-bar">
           <!-- Horizon Filter Tabs (Segmented Control) -->
@@ -483,6 +560,17 @@
 
           <!-- Filter Dropdowns & Sorter -->
           <div class="controls-right">
+            <!-- Member Filter (For Admin or Team View) -->
+            <div class="select-group" id="filterMemberGroup">
+              <label for="filterMemberSelect"><i class="fa-solid fa-user-tag text-indigo"></i> Member:</label>
+              <select id="filterMemberSelect" class="form-select-sm">
+                <option value="all">All Members</option>
+                <option value="user-alex">Alex Morgan</option>
+                <option value="user-sarah">Sarah Chen</option>
+                <option value="user-david">David Kumar</option>
+              </select>
+            </div>
+
             <!-- Status Filter -->
             <div class="select-group">
               <label for="filterStatusSelect"><i class="fa-solid fa-filter"></i> Status:</label>
@@ -712,6 +800,18 @@
           </div>
         </div>
 
+        <!-- Assignee Selection -->
+        <div class="form-row">
+          <div class="form-group col-md-12">
+            <label for="taskAssigneeSelect" class="form-label"><i class="fa-solid fa-user-tag text-indigo"></i> Assigned Team Member</label>
+            <select id="taskAssigneeSelect" class="form-select">
+              <option value="user-alex">🟣 Alex Morgan (Executive Director)</option>
+              <option value="user-sarah">🟢 Sarah Chen (Senior Product Manager)</option>
+              <option value="user-david">🟡 David Kumar (Principal Architect)</option>
+            </select>
+          </div>
+        </div>
+
         <!-- Modal Footer -->
         <div class="modal-footer">
           <span class="modal-shortcut-hint">Press <strong>Ctrl + Enter</strong> to save</span>
@@ -751,16 +851,19 @@
 
         <!-- Quick 1-Click Demo Profiles -->
         <div class="quick-demo-users-box">
-          <span class="quick-demo-label"><i class="fa-solid fa-bolt text-amber"></i> Quick 1-Click Demo Sign In:</span>
+          <span class="quick-demo-label"><i class="fa-solid fa-bolt text-amber"></i> 1-Click Demo Profiles (Admin & Individual):</span>
           <div class="quick-demo-btns-row">
-            <button type="button" class="quick-demo-pill demo-login-pill" data-login="alex">
-              <span class="pill-avatar bg-indigo">AM</span> Alex (Executive)
+            <button type="button" class="quick-demo-pill demo-login-pill pill-admin" data-login="admin" title="Sign in as Organization Administrator">
+              <span class="pill-avatar bg-rose">EV</span> 👑 Eleanor (Admin)
             </button>
-            <button type="button" class="quick-demo-pill demo-login-pill" data-login="sarah">
-              <span class="pill-avatar bg-teal">SC</span> Sarah (Product)
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="alex" title="Sign in as Alex Morgan">
+              <span class="pill-avatar bg-indigo">AM</span> 👤 Alex (User)
             </button>
-            <button type="button" class="quick-demo-pill demo-login-pill" data-login="david">
-              <span class="pill-avatar bg-amber">DK</span> David (Tech Lead)
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="sarah" title="Sign in as Sarah Chen">
+              <span class="pill-avatar bg-teal">SC</span> 👤 Sarah (User)
+            </button>
+            <button type="button" class="quick-demo-pill demo-login-pill" data-login="david" title="Sign in as David Kumar">
+              <span class="pill-avatar bg-amber">DK</span> 👤 David (User)
             </button>
           </div>
         </div>
@@ -781,6 +884,15 @@
           <div class="form-group" id="authRoleGroup" style="display: none;">
             <label for="authRoleInput" class="form-label">Professional Role / Title</label>
             <input type="text" id="authRoleInput" class="form-input" placeholder="e.g., Senior Strategy Consultant">
+          </div>
+
+          <!-- Account Type (Only shown in Sign Up mode) -->
+          <div class="form-group" id="authAccountTypeGroup" style="display: none;">
+            <label for="authAccountTypeSelect" class="form-label required">Dashboard & Account Type</label>
+            <select id="authAccountTypeSelect" class="form-select">
+              <option value="user">👤 Individual Team Member (User Dashboard)</option>
+              <option value="admin">👑 Organization Administrator (Admin Dashboard)</option>
+            </select>
           </div>
 
           <!-- Email -->
